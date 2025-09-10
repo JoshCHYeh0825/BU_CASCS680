@@ -138,8 +138,14 @@ class Sketch(CanvasBase):
                 print("draw a line from ", self.points_l[-1], " -> ", self.points_l[-2])
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
             # self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
+            self.drawRectange(self.buff, self.points_l[-2], self.points_l[-1],)
+            
             self.drawPoint(self.buff, self.points_l[-1]) 
             self.points_l.clear()
+
+    # Draws a rectangle
+    def drawRectange(self, buff, p1, p2):
+        
 
     # Deal with Mouse Right Button Pressed Interruption
     def Interrupt_MouseR(self, x, y):
