@@ -139,13 +139,19 @@ class Sketch(CanvasBase):
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
             # self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
             self.drawRectange(self.buff, self.points_l[-2], self.points_l[-1],)
-            
-            self.drawPoint(self.buff, self.points_l[-1]) 
+            # self.drawPoint(self.buff, self.points_l[-1]) 
             self.points_l.clear()
 
     # Draws a rectangle
-    def drawRectange(self, buff, p1, p2):
+    def drawRectange(self, buff, p1: Point, p2: Point):
+        minX = min(p1.coords[0], p2.coords[0])
+        maxX = max(p1.coords[0], p2.coords[0])
+        minY = min(p1.coords[1], p2.coords[1])
+        maxY = max(p1.coords[1], p2.coords[1])
         
+        for i in range(minX, maxX + 1):
+            for j in range(minY, maxY + 1):
+                self.drawPoint(buff, Point([i, j], p1.color))
 
     # Deal with Mouse Right Button Pressed Interruption
     def Interrupt_MouseR(self, x, y):
