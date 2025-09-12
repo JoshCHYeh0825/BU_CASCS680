@@ -287,7 +287,6 @@ class Sketch(CanvasBase):
         # Getting coordinates and colors of p1 and p2
         x1, y1 = p1.getCoords()
         x2, y2 = p2.getCoords()
-        
         c1 = p1.getColor()
         c2 = p2.getColor()
         
@@ -300,14 +299,26 @@ class Sketch(CanvasBase):
         curr_x = x1
         curr_y = y1
         
-        # Bresenham's algorithm loop iterations
-        while curr_x <= x2:
+        # For loop for color interpolation
+        for curr_x in range(x1, x2 + 1):
+            # Color interpolation if doSmooth is True
+            c_to_draw = c1
+            
+            if doSmooth and delta_x != 0:
+                t = (curr_x - x1) / delta_x
+                r = (1 - t) * c1.r + t * c2.r
+                g = (1 - t) * c1.g + t * c2.g
+                b = (1 - t) * c1.b + t * c2.b
+                c_to_draw = ColorType(r, g, b)
+            
+            self.drawPoint(buff, Point((curr_x, curr_y), c_to_draw(r, g, b)))    
+            
+        # Bresenham's algorithm for line
             if p < 0:
                 p += (2 * delta_y)
             else:
                 p += (2 * delta_y) - (2 * delta_x)
                 curr_y += 1
-        return
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
         """
