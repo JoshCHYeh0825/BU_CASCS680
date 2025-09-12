@@ -283,6 +283,24 @@ class Sketch(CanvasBase):
         # Requirements:
         #   1. Only integer is allowed in interpolate point coordinates between p1 and p2
         #   2. Float number is allowed in interpolate point color
+        
+        # Getting coordinates and colors of p1 and p2
+        x1, y1 = p1.getCoords()
+        x2, y2 = p2.getCoords()
+        
+        c1 = p1.getColor()
+        c2 = p2.getColor()
+        
+        # Calculate deltas
+        delta_x = x2 - x1
+        delta_y = y2 - y1
+        
+        # Initialize decision parameter p
+        p = (2 * delta_y) - delta_x
+                
+            
+            
+        
         return
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
