@@ -297,10 +297,16 @@ class Sketch(CanvasBase):
         
         # Initialize decision parameter p
         p = (2 * delta_y) - delta_x
-                
-            
-            
+        curr_x = x1
+        curr_y = y1
         
+        # Bresenham's algorithm loop iterations
+        while curr_x <= x2:
+            if p < 0:
+                p += (2 * delta_y)
+            else:
+                p += (2 * delta_y) - (2 * delta_x)
+                curr_y += 1
         return
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
