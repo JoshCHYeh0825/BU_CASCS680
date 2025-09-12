@@ -170,7 +170,7 @@ class Sketch(CanvasBase):
             if self.debug > 0:
                 print("draw a triangle {} -> {} -> {}".format(self.points_r[-3], self.points_r[-2], self.points_r[-1]))
             # TODO 0: uncomment drawTriangle and comment out drawPoint when you finished the drawTriangle function 
-            # self.drawTriangle(self.buff, self.points_l[-3], self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel, self.doTexture)
+            # self.drawTriangle(self.buff, self.points_r[-3], self.points_r[-2], self.points_r[-1], self.doSmooth, self.doAA, self.doAAlevel, self.doTexture)
             self.drawPoint(self.buff, self.points_r[-1])
             self.points_r.clear()
 
