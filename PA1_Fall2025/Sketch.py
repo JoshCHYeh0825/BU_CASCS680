@@ -345,6 +345,15 @@ class Sketch(CanvasBase):
         :type doTexture: bool
         :rtype: None
         """
+        # Scanline Rasterization Implementaion
+        # Sorting p1 through p3 by y-coordinates
+        points = [p1, p2, p3]
+        sorted_points = sorted(points, key=lambda point: point.coords[1])
+        v_top, v_mid, v_bot = sorted_points
+        
+        # Finding the split point of the triangle
+        
+
         ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
         ##### TODO 3(For CS680 Students): Implement texture-mapped fill of triangle. Texture is stored in self.texture
         # Requirements:
