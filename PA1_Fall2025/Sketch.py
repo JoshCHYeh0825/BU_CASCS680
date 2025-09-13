@@ -137,12 +137,13 @@ class Sketch(CanvasBase):
             if self.debug > 0:
                 print("draw a line from ", self.points_l[-1], " -> ", self.points_l[-2])
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
-            # self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
-            self.drawRectange(self.buff, self.points_l[-2], self.points_l[-1],)
+            self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
+            # self.drawRectange(self.buff, self.points_l[-2], self.points_l[-1],)
             # self.drawPoint(self.buff, self.points_l[-1]) 
             self.points_l.clear()
-
-    # Draws a rectangle
+            
+    """
+     # Draws a rectangle
     def drawRectange(self, buff, p1: Point, p2: Point):
         minX = min(p1.coords[0], p2.coords[0])
         maxX = max(p1.coords[0], p2.coords[0])
@@ -152,6 +153,7 @@ class Sketch(CanvasBase):
         for i in range(minX, maxX + 1):
             for j in range(minY, maxY + 1):
                 self.drawPoint(buff, Point([i, j], p1.color))
+    """
 
     # Deal with Mouse Right Button Pressed Interruption
     def Interrupt_MouseR(self, x, y):
@@ -164,14 +166,14 @@ class Sketch(CanvasBase):
             if self.debug > 0:
                 print("draw a line from ", self.points_r[-1], " -> ", self.points_r[-2])
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
-            # self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
-            self.drawPoint(self.buff, self.points_r[-1])
+            self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
+            # self.drawPoint(self.buff, self.points_r[-1])
         elif len(self.points_r) % 3 == 0 and len(self.points_r) > 0:
             if self.debug > 0:
                 print("draw a triangle {} -> {} -> {}".format(self.points_r[-3], self.points_r[-2], self.points_r[-1]))
             # TODO 0: uncomment drawTriangle and comment out drawPoint when you finished the drawTriangle function 
-            # self.drawTriangle(self.buff, self.points_r[-3], self.points_r[-2], self.points_r[-1], self.doSmooth, self.doAA, self.doAAlevel, self.doTexture)
-            self.drawPoint(self.buff, self.points_r[-1])
+            self.drawTriangle(self.buff, self.points_r[-3], self.points_r[-2], self.points_r[-1], self.doSmooth, self.doAA, self.doAAlevel, self.doTexture)
+            # self.drawPoint(self.buff, self.points_r[-1])
             self.points_r.clear()
 
     def Interrupt_Keyboard(self, keycode):
