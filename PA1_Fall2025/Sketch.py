@@ -166,7 +166,7 @@ class Sketch(CanvasBase):
             if self.debug > 0:
                 print("draw a line from ", self.points_r[-1], " -> ", self.points_r[-2])
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
-            self.drawLine(self.buff, self.points_l[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
+            self.drawLine(self.buff, self.points_r[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
             # self.drawPoint(self.buff, self.points_r[-1])
         elif len(self.points_r) % 3 == 0 and len(self.points_r) > 0:
             if self.debug > 0:
@@ -398,7 +398,7 @@ class Sketch(CanvasBase):
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
                         c_draw = p1.color
-                    self.drawPoint(buff, Point(x, y, c_draw))
+                    self.drawPoint(buff, Point((x, y), c_draw))
         
         # For Flat Top Triangle
         def fill_flattop_tri(v0, v1, v2):
@@ -429,7 +429,7 @@ class Sketch(CanvasBase):
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
                         c_draw = p1.color
-                    self.drawPoint(buff, Point(x, y, c_draw))
+                    self.drawPoint(buff, Point((x, y), c_draw))
         
         # Split into cases
         # Flat Bottom
