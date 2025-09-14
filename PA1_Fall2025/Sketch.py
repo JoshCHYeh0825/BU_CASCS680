@@ -345,6 +345,17 @@ class Sketch(CanvasBase):
         :type doTexture: bool
         :rtype: None
         """
+        # Declaring multiple helper functions to simplify the process
+        # Linear Interpolation between two points
+        def linterp(p0, p1, t):
+            return p0 + t * (p1 - p0)
+        
+        # Linear interpolation between colors
+        def linterp_color(c0, c1, t):
+            return ColorType(linterp(c0.r, c1.r, t),
+                             linterp(c0.g, c1.g, t),
+                             linterp(c0.b, c1.b, t))
+        
         # Scanline Rasterization Implementaion
         # Sorting p1 through p3 by y-coordinates
         points = [p1, p2, p3]
@@ -372,7 +383,6 @@ class Sketch(CanvasBase):
             g_split = (1 - t) * v_top.color.g + t * v_bot.color.g
             b_split = (1 - t) * v_top.color.b + t * v_bot.color.b
             c_split = ColorType(r_split, g_split, b_split)
-            
             v_split = Point((int(x_split), v_mid.coords[1]), c_split)
 
         ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
