@@ -360,12 +360,20 @@ class Sketch(CanvasBase):
             fill_flat_top_triangle = (v_top, v_mid, v_bot)
         
         # Triangle that needs to be split
-        else
-        t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
-        x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
-        c_split = (1 - t* v_top.color + t * v_bot.color)
-        
-        
+        else:
+            # Checking for divizion by zero for horizontal line
+            if v_bot.coords[1] - v_top.coords[1] == 0:
+                return
+            t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
+            x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
+            
+            # For color interpolation
+            r_split = (1 - t) * v_top.color.r + t * v_bot.color.r
+            g_split = (1 - t) * v_top.color.g + t * v_bot.color.g
+            b_split = (1 - t) * v_top.color.b + t * v_bot.color.b
+            c_split = ColorType(r_split, g_split, b_split)
+            
+            v_split = Point((int(x_split), v_mid.coords[1]), c_split)
 
         ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
         ##### TODO 3(For CS680 Students): Implement texture-mapped fill of triangle. Texture is stored in self.texture
