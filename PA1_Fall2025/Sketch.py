@@ -351,7 +351,16 @@ class Sketch(CanvasBase):
         sorted_points = sorted(points, key=lambda point: point.coords[1])
         v_top, v_mid, v_bot = sorted_points
         
-        # Finding the split point of the triangle
+        # For Flat Bottom Triangle
+        if v_mid.coords[1] == v_bot.coords[1]:
+            fill_flat_bottom_triangle = (v_top, v_mid, v_bot)
+        
+        # For Flat Top Triangle
+        elif v_top.coords[1] == v_mid.coords[1]:
+            fill_flat_top_triangle = (v_top, v_mid, v_bot)
+        
+        # Triangle that needs to be split
+        else
         t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
         x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
         c_split = (1 - t* v_top.color + t * v_bot.color)
