@@ -352,6 +352,10 @@ class Sketch(CanvasBase):
         v_top, v_mid, v_bot = sorted_points
         
         # Finding the split point of the triangle
+        t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
+        x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
+        c_split = (1 - t* v_top.color + t * v_bot.color)
+        
         
 
         ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
