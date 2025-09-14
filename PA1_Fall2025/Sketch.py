@@ -289,38 +289,49 @@ class Sketch(CanvasBase):
         # Getting coordinates and colors of p1 and p2
         x1, y1 = p1.getCoords()
         x2, y2 = p2.getCoords()
-        c1 = p1.getColor()
-        c2 = p2.getColor()
+        c1, c2 = p1.getColor(), p2.getColor()
         
-        # Calculate deltas
-        delta_x = x2 - x1
-        delta_y = y2 - y1
+        # Ensuring the lines are always drawn from left to right
+        if x1 > x2:
+            x1, y1, x2, y2 = x2, y2, x1, y1
+            c1, c2 = c2, c1
         
+        # Calculate deltas and steps for x and y
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        
+        # Step directions for x and y
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+
         # Initialize decision parameter p
-        p = (2 * delta_y) - delta_x
-        curr_x = x1
-        curr_y = y1
+        # Initialize initial points for x and y
+        P = (2 * dy) - dx
+        curr_x, curr_y = x1, y1
         
         # For loop for color interpolation
         for curr_x in range(x1, x2 + 1):
             # Color interpolation if doSmooth is True
-            c_to_draw = c1
-            
-            if doSmooth and delta_x != 0:
-                t = (curr_x - x1) / delta_x
+            if doSmooth and dx != 0:
+                t = (curr_x - x1) / dx
                 r = (1 - t) * c1.r + t * c2.r
                 g = (1 - t) * c1.g + t * c2.g
                 b = (1 - t) * c1.b + t * c2.b
-                c_to_draw = ColorType(r, g, b)
-            
-            self.drawPoint(buff, Point((curr_x, curr_y), c_to_draw(r, g, b)))    
-            
-        # Bresenham's algorithm for line
-            if p < 0:
-                p += (2 * delta_y)
+                c_draw = ColorType(r, g, b)   
             else:
-                p += (2 * delta_y) - (2 * delta_x)
-                curr_y += 1
+                c_draw = c1  
+        
+        # Plotting the point
+            self.drawPoint(buff, Point((curr_x, curr_y), c_draw))    
+          
+        # Bresenham's algorithm for line
+            if P < 0:
+                P += (2 * dy)
+            else:
+                P += 2 * (dy - dx)
+                curr_y += sy
+                
+            curr_x += 1
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
         """
@@ -358,17 +369,70 @@ class Sketch(CanvasBase):
         
         # Scanline Rasterization Implementaion
         # Sorting p1 through p3 by y-coordinates
-        points = [p1, p2, p3]
-        sorted_points = sorted(points, key=lambda point: point.coords[1])
+        sorted_points = sorted([p1, p2, p3], key=lambda point: point.coords[1])
         v_top, v_mid, v_bot = sorted_points
         
-        # For Flat Bottom Triangle
-        if v_mid.coords[1] == v_bot.coords[1]:
-            fill_flat_bottom_triangle = (v_top, v_mid, v_bot)
+        # Helper for filling Flat Bottom Triangle
+        def fill_flatbot_tri(v0, v1, v2):
+            dy = v2.coords[1] - v0.coords[1]
+            if dy == 0:
+                return
+            for y in range(v0.coords[1], v2.coords[1] + 1):
+                t0 = (y - v0.coords[1]) / dy
+                x_left = int(linterp(v0.coords[0], v1.coords[0], (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1)))
+                x_right = int(linterp(v0.coords[0], v2.coords[0], t0))
+                
+                # Color Interpolation
+                If doSmooth:
+                    c_left = linterp_color(v0.color, v1.color, (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1))
+                    c_right = linterp_color(v0.color, v2.color, t0)
+                else:
+                    c_left = c_right = v0.color
+                
+                # Ensuring left < right
+                if x_left > x_right:
+                    x_left, x_right = x_right, x_left
+                    c_left, c_right = c_right, c_left
+                
+                # Fillin the span horizontally
+                for x in range(x_left, x_right + 1):
+                    if doSmooth:
+                        t = (x - x_left) / max(1, (x_right - x_right))
+                        c_draw = linterp_color(c_left, c_right, t)
+                    else:
+                        c_draw = v0.color
+                    self.drawPoint(buff, Point(x, y), c_draw)
         
         # For Flat Top Triangle
-        elif v_top.coords[1] == v_mid.coords[1]:
-            fill_flat_top_triangle = (v_top, v_mid, v_bot)
+        def fill_flattop_tri(v0, v1, v2):
+            dy = v2.coords[1] - v0.coords[1]
+            if dy == 0:
+                return
+            for y in range(v0.coords[1], v2.coords[1] + 1):
+                t0 = (y - v0.coords[1]) / dy
+                x_left = int(linterp(v0.coords[0], v2.coords[0], t0))
+                x_right = int(linterp(v1.coords[0], v2.coords[0], t0))
+                
+                # Color Interpolation
+                If doSmooth:
+                    c_left = linterp_color(v0.color, v1.color, t0)
+                    c_right = linterp_color(v0.color, v2.color, t0)
+                else:
+                    c_left = c_right = v0.color
+                
+                # Ensuring left < right
+                if x_left > x_right:
+                    x_left, x_right = x_right, x_left
+                    c_left, c_right = c_right, c_left
+                
+                # Fillin the span horizontally
+                for x in range(x_left, x_right + 1):
+                    if doSmooth:
+                        t = (x - x_left) / max(1, (x_right - x_right))
+                        c_draw = linterp_color(c_left, c_right, t)
+                    else:
+                        c_draw = v0.color
+                    self.drawPoint(buff, Point(x, y), c_draw)
         
         # Triangle that needs to be split
         else:
