@@ -308,7 +308,6 @@ class Sketch(CanvasBase):
         # Initialize initial points for x and y
         P = (2 * dy) - dx
         curr_x, curr_y = x1, y1
-        
         # For loop for color interpolation
         for curr_x in range(x1, x2 + 1):
             # Color interpolation if doSmooth is True
@@ -319,18 +318,15 @@ class Sketch(CanvasBase):
                 b = (1 - t) * c1.b + t * c2.b
                 c_draw = ColorType(r, g, b)   
             else:
-                c_draw = c1  
-        
+                c_draw = c1 
         # Plotting the point
-            self.drawPoint(buff, Point((curr_x, curr_y), c_draw))    
-          
+            self.drawPoint(buff, Point((curr_x, curr_y), c_draw))     
         # Bresenham's algorithm for line
             if P < 0:
                 P += (2 * dy)
             else:
                 P += 2 * (dy - dx)
-                curr_y += sy
-                
+                curr_y += sy 
             curr_x += 1
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
@@ -356,6 +352,7 @@ class Sketch(CanvasBase):
         :type doTexture: bool
         :rtype: None
         """
+        ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
         # Declaring multiple helper functions to simplify the process
         # Linear Interpolation between two points
         def linterp(p0, p1, t):
@@ -383,25 +380,25 @@ class Sketch(CanvasBase):
                 x_right = int(linterp(v0.coords[0], v2.coords[0], t0))
                 
                 # Color Interpolation
-                If doSmooth:
+                if doSmooth:
                     c_left = linterp_color(v0.color, v1.color, (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1))
                     c_right = linterp_color(v0.color, v2.color, t0)
                 else:
-                    c_left = c_right = v0.color
+                    c_left = c_right = p1.color
                 
                 # Ensuring left < right
                 if x_left > x_right:
                     x_left, x_right = x_right, x_left
                     c_left, c_right = c_right, c_left
                 
-                # Fillin the span horizontally
+                # Fill horizontal span
                 for x in range(x_left, x_right + 1):
                     if doSmooth:
-                        t = (x - x_left) / max(1, (x_right - x_right))
+                        t = (x - x_left) / max(1, (x_right - x_left))
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
-                        c_draw = v0.color
-                    self.drawPoint(buff, Point(x, y), c_draw)
+                        c_draw = p1.color
+                    self.drawPoint(buff, Point(x, y, c_draw))
         
         # For Flat Top Triangle
         def fill_flattop_tri(v0, v1, v2):
@@ -414,49 +411,50 @@ class Sketch(CanvasBase):
                 x_right = int(linterp(v1.coords[0], v2.coords[0], t0))
                 
                 # Color Interpolation
-                If doSmooth:
+                if doSmooth:
                     c_left = linterp_color(v0.color, v1.color, t0)
                     c_right = linterp_color(v0.color, v2.color, t0)
                 else:
-                    c_left = c_right = v0.color
+                    c_left = c_right = p1.color
                 
                 # Ensuring left < right
                 if x_left > x_right:
                     x_left, x_right = x_right, x_left
                     c_left, c_right = c_right, c_left
                 
-                # Fillin the span horizontally
+                # Fill horizontal span
                 for x in range(x_left, x_right + 1):
                     if doSmooth:
-                        t = (x - x_left) / max(1, (x_right - x_right))
+                        t = (x - x_left) / max(1, (x_right - x_left))
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
-                        c_draw = v0.color
-                    self.drawPoint(buff, Point(x, y), c_draw)
+                        c_draw = p1.color
+                    self.drawPoint(buff, Point(x, y, c_draw))
         
-        # Triangle that needs to be split
+        # Split into cases
+        # Flat Bottom
+        if v_mid.coords[1] == v_bot.coords[1]:
+            fill_flatbot_tri(v_top, v_mid, v_bot)
+        # Flat Top
+        elif v_top.coords[1] == v_mid.coords[1]:
+            fill_flattop_tri(v_top, v_mid, v_bot)
+        
+        # General Triangle
         else:
-            # Checking for divizion by zero for horizontal line
-            if v_bot.coords[1] - v_top.coords[1] == 0:
-                return
             t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
             x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
-            
-            # For color interpolation
-            r_split = (1 - t) * v_top.color.r + t * v_bot.color.r
-            g_split = (1 - t) * v_top.color.g + t * v_bot.color.g
-            b_split = (1 - t) * v_top.color.b + t * v_bot.color.b
-            c_split = ColorType(r_split, g_split, b_split)
+            c_split = linterp_color(v_top.color, v_bot.color, t)
             v_split = Point((int(x_split), v_mid.coords[1]), c_split)
-
-        ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
+            
+            fill_flatbot_tri(v_top, v_mid, v_split)
+            fill_flattop_tri(v_mid, v_split, v_bot)
+        
         ##### TODO 3(For CS680 Students): Implement texture-mapped fill of triangle. Texture is stored in self.texture
         # Requirements:
         #   1. For flat shading of the triangle, use the first vertex color.
         #   2. Polygon scan fill algorithm and the use of barycentric coordinate are not allowed in this function
         #   3. You should be able to support both flat shading and smooth shading, which is controlled by doSmooth
         #   4. For texture-mapped fill of triangles, it should be controlled by doTexture flag.
-        return
 
     # test for lines lines in all directions
     def testCaseLine01(self, n_steps):
