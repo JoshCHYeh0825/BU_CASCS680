@@ -300,11 +300,10 @@ class Sketch(CanvasBase):
         dx = abs(x2 - x1)
         dy = abs(y2 - y1)
         
-        # Step directions for x and y
-        sx = 1 if x1 < x2 else -1
+        # Step direction for y
         sy = 1 if y1 < y2 else -1
 
-        # Initialize decision parameter p
+        # Initialize decision parameter P
         # Initialize initial points for x and y
         P = (2 * dy) - dx
         curr_x, curr_y = x1, y1
