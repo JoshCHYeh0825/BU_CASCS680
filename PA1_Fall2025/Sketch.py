@@ -363,10 +363,16 @@ class Sketch(CanvasBase):
                              linterp(c0.g, c1.g, t),
                              linterp(c0.b, c1.b, t))
         
-        # Scanline Rasterization Implementaion
         # Sorting p1 through p3 by y-coordinates
         sorted_points = sorted([p1, p2, p3], key=lambda point: point.coords[1])
         v_top, v_mid, v_bot = sorted_points
+        
+        # Computing the bounding box of the triangle
+        min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
+        max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
+        min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
+        max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
+
         
         # Helper for filling Flat Bottom Triangle
         def fill_flatbot_tri(v0, v1, v2):
