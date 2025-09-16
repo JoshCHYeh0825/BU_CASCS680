@@ -354,18 +354,51 @@ class Sketch(CanvasBase):
         ##### TODO 2: Write a triangle rendering function, which support smooth bilinear interpolation of the vertex color
         # Declaring multiple helper functions to simplify the process
         # Linear Interpolation between two points
+        
+        ##### TODO 3(For CS680 Students): Implement texture-mapped fill of triangle. Texture is stored in self.texture
+        # Requirements:
+        #   1. For flat shading of the triangle, use the first vertex color.
+        #   2. Polygon scan fill algorithm and the use of barycentric coordinate are not allowed in this function
+        #   3. You should be able to support both flat shading and smooth shading, which is controlled by doSmooth
+        #   4. For texture-mapped fill of triangles, it should be controlled by doTexture flag.        
+        
         def linterp(p0, p1, t):
             return p0 + t * (p1 - p0)
         
         # Linear interpolation between colors
         def linterp_color(c0, c1, t):
-            return ColorType(linterp(c0.r, c1.r, t),
-                             linterp(c0.g, c1.g, t),
-                             linterp(c0.b, c1.b, t))
+            return ColorType(
+                linterp(c0.r, c1.r, t),
+                linterp(c0.g, c1.g, t),
+                linterp(c0.b, c1.b, t)
+            )
+        
+        def billinear_text(u, v):
+            u0, v0 = int(math.floor(u)), int(math.floor(v))
+            u1, v1 = u0 + 1, v0 + 1
+            u0 = max(0, min(self.texture.width - 1, u0))
+            u1 = max(0, min(self.texture.width - 1, u1))
+            v0 = max(0, min(self.texture.height - 1, v0))
+            v1 = max(0, min(self.texture.height - 1, v1))
+            
+            s = u - u0
+            t = v - v0
+            
+            c00 = self.queryTextureBuffPoint(self.texture, u0, v0).getColor()
+            c10 = self.queryTextureBuffPoint(self.texture, u1, v0).getColor()
+            c01 = self.queryTextureBuffPoint(self.texture, u0, v1).getColor()
+            c11 = self.queryTextureBuffPoint(self.texture, u1, v1).getColor()
+            
         
         # Sorting p1 through p3 by y-coordinates
         sorted_points = sorted([p1, p2, p3], key=lambda point: point.coords[1])
         v_top, v_mid, v_bot = sorted_points
+
+        # Computing the bounding box of the triangle
+        min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
+        max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
+        min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
+        max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
 
         # Helper for filling Flat Bottom Triangle
         def fill_flatbot_tri(v0, v1, v2):
@@ -390,12 +423,24 @@ class Sketch(CanvasBase):
                     c_left, c_right = c_right, c_left
                 
                 # Fill horizontal span
-                for x in range(x_left, x_right + 1):
-                    if doSmooth:
+                for x in range(x_left, x_right + 1):            
+                    # Texture Bilinear Interpolation    
+                    if doTexture:
+                        # Computing te4xture coordinates from (x, y) to (u, v)
+                        u = (x - min_x) / max(1, (max_x - min_x)) * (self.texture.width - 1)
+                        v = (y - min_y) / max(1, (max_y - min_y)) * (self.texture.height - 1)
+                        
+                        # Query texture color
+                        tex_point = self.queryTextureBuffPoint(self.texture, int(u), int(v))
+                        c_draw = tex_point.getColor()
+                        
+                    elif doSmooth:
                         t = (x - x_left) / max(1, (x_right - x_left))
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
+                        # Flat shading
                         c_draw = p1.color
+                        
                     self.drawPoint(buff, Point((x, y), c_draw))
         
         # For Flat Top Triangle
@@ -422,11 +467,21 @@ class Sketch(CanvasBase):
                 
                 # Fill horizontal span
                 for x in range(x_left, x_right + 1):
-                    if doSmooth:
+                    # Texture Bilinear Interpolation    
+                    if doTexture:
+                        # Computing te4xture coordinates from (x, y) to (u, v)
+                        u = (x - min_x) / max(1, (max_x - min_x)) * (self.texture.width - 1)
+                        v = (y - min_y) / max(1, (max_y - min_y)) * (self.texture.height - 1)
+                        
+                        # Query texture color
+                        tex_point = self.queryTextureBuffPoint(self.texture, int(u), int(v))
+                        c_draw = tex_point.getColor()
+                    elif doSmooth:
                         t = (x - x_left) / max(1, (x_right - x_left))
                         c_draw = linterp_color(c_left, c_right, t)
                     else:
                         c_draw = p1.color
+                        
                     self.drawPoint(buff, Point((x, y), c_draw))
         
         # Split into cases
@@ -446,22 +501,6 @@ class Sketch(CanvasBase):
             
             fill_flatbot_tri(v_top, v_mid, v_split)
             fill_flattop_tri(v_mid, v_split, v_bot)
-        
-        ##### TODO 3(For CS680 Students): Implement texture-mapped fill of triangle. Texture is stored in self.texture
-        # Requirements:
-        #   1. For flat shading of the triangle, use the first vertex color.
-        #   2. Polygon scan fill algorithm and the use of barycentric coordinate are not allowed in this function
-        #   3. You should be able to support both flat shading and smooth shading, which is controlled by doSmooth
-        #   4. For texture-mapped fill of triangles, it should be controlled by doTexture flag.
-
-        # Computing the bounding box of the triangle
-        min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
-        max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
-        min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
-        max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
-        
-        
-        
         
     # test for lines lines in all directions
     def testCaseLine01(self, n_steps):
