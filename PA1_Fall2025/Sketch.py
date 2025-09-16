@@ -290,15 +290,19 @@ class Sketch(CanvasBase):
         x1, y1 = p1.getCoords()
         x2, y2 = p2.getCoords()
         c1, c2 = p1.getColor(), p2.getColor()
-        
-        # Ensuring the lines are always drawn from left to right
-        if x1 > x2:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-            c1, c2 = c2, c1
-        
+
         # Calculate deltas and steps for x and y
         dx = abs(x2 - x1)
         dy = abs(y2 - y1)
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+        
+        # Ensuring the lines are always drawn from left to right
+        if dy > dx:
+            x1, y1, x2, y2 = x2, y2, x1, y1
+            dx, dy = dy, dx
+            c1, c2 = c2, c1
+            sx, sy = sy, sx
         
         # Step direction for y
         sy = 1 if y1 < y2 else -1
@@ -373,23 +377,33 @@ class Sketch(CanvasBase):
                 linterp(c0.b, c1.b, t)
             )
         
-        def billinear_text(u, v):
+        # Helper function for billinear inte4rpolating texture
+        def bilinear_text(u, v):
+            # Finds nearest indices of texture map
             u0, v0 = int(math.floor(u)), int(math.floor(v))
             u1, v1 = u0 + 1, v0 + 1
+            
+            # Making sure we stay inbound of the map
             u0 = max(0, min(self.texture.width - 1, u0))
             u1 = max(0, min(self.texture.width - 1, u1))
             v0 = max(0, min(self.texture.height - 1, v0))
             v1 = max(0, min(self.texture.height - 1, v1))
             
+            # Fractional change of texture map
             s = u - u0
             t = v - v0
             
+            # Get closest 4 texture pixels
             c00 = self.queryTextureBuffPoint(self.texture, u0, v0).getColor()
             c10 = self.queryTextureBuffPoint(self.texture, u1, v0).getColor()
             c01 = self.queryTextureBuffPoint(self.texture, u0, v1).getColor()
             c11 = self.queryTextureBuffPoint(self.texture, u1, v1).getColor()
             
-        
+            # Interpolate horizontally then vertically
+            c0 = linterp_color(c00, c10, s)  # bottom row blend
+            c1 = linterp_color(c01, c11, s)  # top row blend
+            return linterp(c0, c1, t)  # blend the two rows
+            
         # Sorting p1 through p3 by y-coordinates
         sorted_points = sorted([p1, p2, p3], key=lambda point: point.coords[1])
         v_top, v_mid, v_bot = sorted_points
@@ -399,109 +413,50 @@ class Sketch(CanvasBase):
         max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
         min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
         max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
+        
+        # Preventing division by 0
+        bbox_w = max(1, max_x - min_x)
+        bbox_h = max(1, max_y - min_y)
 
-        # Helper for filling Flat Bottom Triangle
-        def fill_flatbot_tri(v0, v1, v2):
-            dy = v2.coords[1] - v0.coords[1]
-            if dy == 0:
+        # Triangle filling helper function
+        def fill_triangle(v0, v1, v2):
+            dy0 = v1.coords[1] - v0.coords[1]
+            dy1 = v2.coords[1] - v0.coords[1]
+            if dy0 == 0 or dy1 == 0:
                 return
+            # Within bounds of triangle
             for y in range(v0.coords[1], v2.coords[1] + 1):
-                t0 = (y - v0.coords[1]) / dy
-                x_left = int(linterp(v0.coords[0], v1.coords[0], (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1)))
-                x_right = int(linterp(v0.coords[0], v2.coords[0], t0))
-                
-                # Color Interpolation
-                if doSmooth:
-                    c_left = linterp_color(v0.color, v1.color, (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1))
-                    c_right = linterp_color(v0.color, v2.color, t0)
+                if y < v1.coords[1]:
+                    t_left = (y - v0.coords[1]) / dy0
+                    x_left = linterp(v0.coords[0], v1.coords[0], t_left)
+                    c_left = linterp_color(v0.color, v1.color, t_left)
                 else:
-                    c_left = c_right = p1.color
-                
-                # Ensuring left < right
+                    t_left = (y - v1.coords[1]) / (v2.coords[1] - v1.coords[1] or 1)
+                    x_left = linterp(v1.coords[0], v2.coords[0], t_left)
+                    c_left = linterp_color(v1.color, v2.color, t_left)
+
+                t_right = (y - v0.coords[1]) / dy1
+                x_right = linterp(v0.coords[0], v2.coords[0], t_right)
+                c_right = linterp_color(v0.color, v2.color, t_right)
+
                 if x_left > x_right:
                     x_left, x_right = x_right, x_left
                     c_left, c_right = c_right, c_left
-                
-                # Fill horizontal span
-                for x in range(x_left, x_right + 1):            
-                    # Texture Bilinear Interpolation    
+
+                for x in range(int(x_left), int(x_right) + 1):
                     if doTexture:
-                        # Computing te4xture coordinates from (x, y) to (u, v)
-                        u = (x - min_x) / max(1, (max_x - min_x)) * (self.texture.width - 1)
-                        v = (y - min_y) / max(1, (max_y - min_y)) * (self.texture.height - 1)
-                        
-                        # Query texture color
-                        tex_point = self.queryTextureBuffPoint(self.texture, int(u), int(v))
-                        c_draw = tex_point.getColor()
-                        
+                        u = (x - min_x) / bbox_w * (self.texture.width - 1)
+                        v = (y - min_y) / bbox_h * (self.texture.height - 1)
+                        c_draw = bilinear_text(u, v)
                     elif doSmooth:
-                        t = (x - x_left) / max(1, (x_right - x_left))
-                        c_draw = linterp_color(c_left, c_right, t)
-                    else:
-                        # Flat shading
-                        c_draw = p1.color
-                        
-                    self.drawPoint(buff, Point((x, y), c_draw))
-        
-        # For Flat Top Triangle
-        def fill_flattop_tri(v0, v1, v2):
-            dy = v2.coords[1] - v0.coords[1]
-            if dy == 0:
-                return
-            for y in range(v0.coords[1], v2.coords[1] + 1):
-                t0 = (y - v0.coords[1]) / dy
-                x_left = int(linterp(v0.coords[0], v2.coords[0], t0))
-                x_right = int(linterp(v1.coords[0], v2.coords[0], t0))
-                
-                # Color Interpolation
-                if doSmooth:
-                    c_left = linterp_color(v0.color, v1.color, t0)
-                    c_right = linterp_color(v0.color, v2.color, t0)
-                else:
-                    c_left = c_right = p1.color
-                
-                # Ensuring left < right
-                if x_left > x_right:
-                    x_left, x_right = x_right, x_left
-                    c_left, c_right = c_right, c_left
-                
-                # Fill horizontal span
-                for x in range(x_left, x_right + 1):
-                    # Texture Bilinear Interpolation    
-                    if doTexture:
-                        # Computing te4xture coordinates from (x, y) to (u, v)
-                        u = (x - min_x) / max(1, (max_x - min_x)) * (self.texture.width - 1)
-                        v = (y - min_y) / max(1, (max_y - min_y)) * (self.texture.height - 1)
-                        
-                        # Query texture color
-                        tex_point = self.queryTextureBuffPoint(self.texture, int(u), int(v))
-                        c_draw = tex_point.getColor()
-                    elif doSmooth:
-                        t = (x - x_left) / max(1, (x_right - x_left))
-                        c_draw = linterp_color(c_left, c_right, t)
+                        alpha = (x - x_left) / max(1, (x_right - x_left))
+                        c_draw = linterp_color(c_left, c_right, alpha)
                     else:
                         c_draw = p1.color
-                        
                     self.drawPoint(buff, Point((x, y), c_draw))
-        
-        # Split into cases
-        # Flat Bottom
-        if v_mid.coords[1] == v_bot.coords[1]:
-            fill_flatbot_tri(v_top, v_mid, v_bot)
-        # Flat Top
-        elif v_top.coords[1] == v_mid.coords[1]:
-            fill_flattop_tri(v_top, v_mid, v_bot)
-        
-        # General Triangle
-        else:
-            t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
-            x_split = (1 - t) * v_top.coords[0] + t * v_bot.coords[0]
-            c_split = linterp_color(v_top.color, v_bot.color, t)
-            v_split = Point((int(x_split), v_mid.coords[1]), c_split)
             
-            fill_flatbot_tri(v_top, v_mid, v_split)
-            fill_flattop_tri(v_mid, v_split, v_bot)
-        
+        fill_triangle(v_top, v_mid, v_bot)
+                
     # test for lines lines in all directions
     def testCaseLine01(self, n_steps):
         center_x = int(self.buff.width / 2)
