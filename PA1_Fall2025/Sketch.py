@@ -405,8 +405,7 @@ class Sketch(CanvasBase):
             return linterp(c0, c1, t)  # blend the two rows
             
         # Sorting p1 through p3 by y-coordinates
-        sorted_points = sorted([p1, p2, p3], key=lambda point: point.coords[1])
-        v_top, v_mid, v_bot = sorted_points
+        v_top, v_mid, v_bot = sorted([p1, p2, p3], key=lambda point: point.coords[1])
 
         # Computing the bounding box of the triangle
         min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
