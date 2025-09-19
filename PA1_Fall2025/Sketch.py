@@ -166,7 +166,7 @@ class Sketch(CanvasBase):
             if self.debug > 0:
                 print("draw a line from ", self.points_r[-1], " -> ", self.points_r[-2])
             # TODO 0: uncomment this and comment out drawPoint when you finished the drawLine function 
-            self.drawLine(self.buff, self.points_r[-2], self.points_l[-1], self.doSmooth, self.doAA, self.doAAlevel)
+            self.drawLine(self.buff, self.points_r[-2], self.points_r[-1], self.doSmooth, self.doAA, self.doAAlevel)
             # self.drawPoint(self.buff, self.points_r[-1])
         elif len(self.points_r) % 3 == 0 and len(self.points_r) > 0:
             if self.debug > 0:
@@ -366,8 +366,19 @@ class Sketch(CanvasBase):
         #   3. You should be able to support both flat shading and smooth shading, which is controlled by doSmooth
         #   4. For texture-mapped fill of triangles, it should be controlled by doTexture flag.        
         # Sorting p1 through p3 by y-coordinates
-     
+
+        # Sorting the vertices by top middle and bottom
         v_top, v_mid, v_bot = sorted([p1, p2, p3], key=lambda point: point.coords[1])
+        
+        # Computing the bounding box of the triangle
+        min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
+        max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
+        min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
+        max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
+        
+        # Preventing division by 0
+        bbox_w = max(1, max_x - min_x)
+        bbox_h = max(1, max_y - min_y)
         
         def linterp(p0, p1, t):
             return p0 + t * (p1 - p0)
@@ -481,16 +492,6 @@ class Sketch(CanvasBase):
 
             fill_flat_bottom(v_top, v_mid, v_split)
             fill_flat_top(v_mid, v_split, v_bot)
-        
-        # Computing the bounding box of the triangle
-        min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
-        max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
-        min_y = min(p1.coords[1], p2.coords[1], p3.coords[1])
-        max_y = max(p1.coords[1], p2.coords[1], p3.coords[1])
-        
-        # Preventing division by 0
-        bbox_w = max(1, max_x - min_x)
-        bbox_h = max(1, max_y - min_y)
 
         # Triangle filling helper function
         def fill_triangle(v0, v1, v2):
