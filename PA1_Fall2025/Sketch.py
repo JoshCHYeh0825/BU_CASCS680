@@ -365,6 +365,9 @@ class Sketch(CanvasBase):
         #   2. Polygon scan fill algorithm and the use of barycentric coordinate are not allowed in this function
         #   3. You should be able to support both flat shading and smooth shading, which is controlled by doSmooth
         #   4. For texture-mapped fill of triangles, it should be controlled by doTexture flag.        
+        # Sorting p1 through p3 by y-coordinates
+     
+        v_top, v_mid, v_bot = sorted([p1, p2, p3], key=lambda point: point.coords[1])
         
         def linterp(p0, p1, t):
             return p0 + t * (p1 - p0)
@@ -403,10 +406,82 @@ class Sketch(CanvasBase):
             c0 = linterp_color(c00, c10, s)  # bottom row blend
             c1 = linterp_color(c01, c11, s)  # top row blend
             return linterp(c0, c1, t)  # blend the two rows
-            
-        # Sorting p1 through p3 by y-coordinates
-        v_top, v_mid, v_bot = sorted([p1, p2, p3], key=lambda point: point.coords[1])
 
+        # Helper function to fill the bottom triangle
+        def fill_flat_bottom(v0, v1, v2):
+            dy = v2.coords[1] - v0.coords[1]
+            if dy == 0:
+                return
+            for y in range(v0.coords[1], v2.coords[1] + 1):
+                t0 = (y - v0.coords[1]) / (v1.coords[1] - v0.coords[1] or 1)
+                t1 = (y - v0.coords[1]) / dy
+
+                x_left = linterp(v0.coords[0], v1.coords[0], t0)
+                x_right = linterp(v0.coords[0], v2.coords[0], t1)
+
+                c_left = linterp_color(v0.color, v1.color, t0) if doSmooth else p1.color
+                c_right = linterp_color(v0.color, v2.color, t1) if doSmooth else p1.color
+
+                if x_left > x_right:
+                    x_left, x_right = x_right, x_left
+                    c_left, c_right = c_right, c_left
+
+                for x in range(int(x_left), int(x_right) + 1):
+                    if doTexture and self.texture:
+                        u = (x - min_x) / bbox_w * (self.texture.width - 1)
+                        v = (y - min_y) / bbox_h * (self.texture.height - 1)
+                        c_draw = bilinear_text(u, v)
+                    elif doSmooth:
+                        alpha = (x - x_left) / max(1, (x_right - x_left))
+                        c_draw = linterp_color(c_left, c_right, alpha)
+                    else:
+                        c_draw = p1.color
+                    self.drawPoint(buff, Point((x, y), c_draw))
+                    
+        # Helper function to fill the top triangle
+        def fill_flat_top(v0, v1, v2):
+            dy = v2.coords[1] - v0.coords[1]
+            if dy == 0: return
+            for y in range(v0.coords[1], v2.coords[1] + 1):
+                t0 = (y - v0.coords[1]) / dy
+                t1 = (y - v1.coords[1]) / (v2.coords[1] - v1.coords[1] or 1)
+
+                x_left = linterp(v0.coords[0], v2.coords[0], t0)
+                x_right = linterp(v1.coords[0], v2.coords[0], t1)
+
+                c_left = linterp_color(v0.color, v2.color, t0) if doSmooth else p1.color
+                c_right = linterp_color(v1.color, v2.color, t1) if doSmooth else p1.color
+
+                if x_left > x_right:
+                    x_left, x_right = x_right, x_left
+                    c_left, c_right = c_right, c_left
+
+                for x in range(int(x_left), int(x_right) + 1):
+                    if doTexture and self.texture:
+                        u = (x - min_x) / bbox_w * (self.texture.width - 1)
+                        v = (y - min_y) / bbox_h * (self.texture.height - 1)
+                        c_draw = bilinear_text(u, v)
+                    elif doSmooth:
+                        alpha = (x - x_left) / max(1, (x_right - x_left))
+                        c_draw = linterp_color(c_left, c_right, alpha)
+                    else:
+                        c_draw = p1.color
+                    self.drawPoint(buff, Point((x, y), c_draw))
+         
+        # Splitting the triangle if necessary
+        if v_mid.coords[1] == v_bot.coords[1]:
+            fill_flat_bottom(v_top, v_mid, v_bot)
+        elif v_top.coords[1] == v_mid.coords[1]:
+            fill_flat_top(v_top, v_mid, v_bot)
+        else:
+            t = (v_mid.coords[1] - v_top.coords[1]) / (v_bot.coords[1] - v_top.coords[1])
+            x_split = linterp(v_top.coords[0], v_bot.coords[0], t)
+            c_split = linterp_color(v_top.color, v_bot.color, t) if doSmooth else p1.color
+            v_split = Point((int(x_split), v_mid.coords[1]), c_split)
+
+            fill_flat_bottom(v_top, v_mid, v_split)
+            fill_flat_top(v_mid, v_split, v_bot)
+        
         # Computing the bounding box of the triangle
         min_x = min(p1.coords[0], p2.coords[0], p3.coords[0])
         max_x = max(p1.coords[0], p2.coords[0], p3.coords[0])
