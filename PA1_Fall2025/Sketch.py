@@ -444,8 +444,9 @@ class Sketch(CanvasBase):
                 x_left = linterp(v0.coords[0], v1.coords[0], t0)
                 x_right = linterp(v0.coords[0], v2.coords[0], t1)
 
-                c_left = linterp_color(v0.color, v1.color, t0) if doSmooth else p1.color
-                c_right = linterp_color(v0.color, v2.color, t1) if doSmooth else p1.color
+                c_left = v0.color if not doSmooth else linterp_color(v0.color, v1.color, t0)
+                c_right = v0.color if not doSmooth else linterp_color(v0.color, v2.color, t1)
+
 
                 uv_left_u = linterp(uv0[0], uv1[0], t0)
                 uv_left_v = linterp(uv0[1], uv1[1], t0)
@@ -492,8 +493,9 @@ class Sketch(CanvasBase):
                 x_left = linterp(v0.coords[0], v2.coords[0], t0)
                 x_right = linterp(v1.coords[0], v2.coords[0], t1)
 
-                c_left = linterp_color(v0.color, v2.color, t0) if doSmooth else p1.color
-                c_right = linterp_color(v1.color, v2.color, t1) if doSmooth else p1.color
+                c_left = v0.color if not doSmooth else linterp_color(v0.color, v1.color, t0)
+                c_right = v0.color if not doSmooth else linterp_color(v0.color, v2.color, t1)
+
 
                 uv_left_u = linterp(uv0[0], uv2[0], t0)
                 uv_left_v = linterp(uv0[1], uv2[1], t0)
