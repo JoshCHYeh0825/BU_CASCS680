@@ -321,7 +321,7 @@ class Sketch(CanvasBase):
                 b = (1 - t) * c1.b + t * c2.b
                 c_draw = ColorType(r, g, b)   
             else:
-                c_draw = c1 
+                c_draw = c1 if abs(curr_x - x1) < abs(curr_x - x2) else c2
         # Plotting the point
             self.drawPoint(buff, Point((curr_x, curr_y), c_draw))     
         # Bresenham's algorithm for line
