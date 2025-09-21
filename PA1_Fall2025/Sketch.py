@@ -296,41 +296,37 @@ class Sketch(CanvasBase):
         dy = abs(y2 - y1)
         sx = 1 if x1 < x2 else -1
         sy = 1 if y1 < y2 else -1
+        err = dx - dy
         
-        # Ensuring the lines are always drawn from left to right
-        if dy > dx:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-            dx, dy = dy, dx
-            c1, c2 = c2, c1
-            sx, sy = sy, sx
+        # number of steps = longest delta (for interpolation)
+        steps = max(dx, dy)
+        i = 0
         
-        # Step direction for y
-        sy = 1 if y1 < y2 else -1
-
-        # Initialize decision parameter P
-        # Initialize initial points for x and y
-        P = (2 * dy) - dx
-        curr_x, curr_y = x1, y1
-        # For loop for color interpolation
-        for curr_x in range(x1, x2 + 1):
-            # Color interpolation if doSmooth is True
-            if doSmooth and dx != 0:
-                t = (curr_x - x1) / dx
+        while True:
+            # interpolate color if needed
+            if doSmooth and steps > 0:
+                t = i / steps
                 r = (1 - t) * c1.r + t * c2.r
                 g = (1 - t) * c1.g + t * c2.g
                 b = (1 - t) * c1.b + t * c2.b
-                c_draw = ColorType(r, g, b)   
+                c_draw = ColorType(r, g, b)
             else:
-                c_draw = c1 if abs(curr_x - x1) < abs(curr_x - x2) else c2
-        # Plotting the point
-            self.drawPoint(buff, Point((curr_x, curr_y), c_draw))     
-        # Bresenham's algorithm for line
-            if P < 0:
-                P += (2 * dy)
-            else:
-                P += 2 * (dy - dx)
-                curr_y += sy 
-            curr_x += 1
+                c_draw = c1
+
+            self.drawPoint(buff, Point((x1, y1), c_draw))
+
+            if x1 == x2 and y1 == y2:
+                break
+
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x1 += sx
+            if e2 < dx:
+                err += dx
+                y1 += sy
+
+            i += 1
 
     def drawTriangle(self, buff, p1, p2, p3, doSmooth=True, doAA=False, doAAlevel=4, doTexture=False):
         """
