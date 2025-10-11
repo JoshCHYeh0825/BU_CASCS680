@@ -44,17 +44,23 @@ class ModelLinkage(Component):
     def __init__(self, parent, position, shaderProg, display_obj=None):
         super().__init__(position, display_obj)
         self.contextParent = parent
+        
+        # Creature design
+        """
+        - Facehugger with horns. Circular/Oval body
+        - 4 three-jointed limbs/legs
+        - 1 four-jointed tail
+        - 2 horns on its 2 eyes
+        - No head, all on a body
+        
+        """
+        # Setting color for the creature
+        color_body = Ct.ColorType(0.8, 0.7, 0.5)  # Beige for the body
+        color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
-        linkageLength = 0.5
-        link1 = Cube(Point((0, 0, 0)), shaderProg, [0.2, 0.2, linkageLength], Ct.DARKORANGE1)
-        link2 = Cube(Point((0, 0, linkageLength)), shaderProg, [0.2, 0.2, linkageLength], Ct.DARKORANGE2)
-        link3 = Cube(Point((0, 0, linkageLength)), shaderProg, [0.2, 0.2, linkageLength], Ct.DARKORANGE3)
-        link4 = Cube(Point((0, 0, linkageLength)), shaderProg, [0.2, 0.2, linkageLength], Ct.DARKORANGE4)
-
-        self.addChild(link1)
-        link1.addChild(link2)
-        link2.addChild(link3)
-        link3.addChild(link4)
+        # Creating the body
+        # Size of body
+        body_size = [0.8, 0.5, 1.5]
 
         self.componentList = [link1, link2, link3, link4]
         self.componentDict = {
