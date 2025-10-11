@@ -59,15 +59,15 @@ class ModelLinkage(Component):
         color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
         # Creating the body
-        # Size of body
-        body_size = [0.8, 0.5, 1.5]
+        # Oval with size [0,8, 0,5, 1.5]
+        # Beige color
+        # Body at origin 0, 0, 0
+        self.body = Sphere(Point(0, 0, 0), shaderProg, [0.8, 0.5, 1.5], color_body, limb=False)
+        self.addChild(self.body)
 
-        self.componentList = [link1, link2, link3, link4]
+        self.componentList = [self.body]
         self.componentDict = {
-            "link1": link1,
-            "link2": link2,
-            "link3": link3,
-            "link4": link4
+            "body": self.body
         }
 
         ##### TODO 4: Define creature's joint behavior
