@@ -132,10 +132,10 @@ class ModelLinkage(Component):
         # Initialize the lists with the body and horns
         self.componentList = [self.body, self.horn_r, self.horn_l]
         self.componentDict = {"body": self.body, "horn_r": self.horn_r, "horn_l": self.horn_l}
-        
+
         for leg_pair in self.right_legs + self.left_legs:
             self.componentList.extend(leg_pair)
-        self.componentList.extend(self.tail_segments)
+            self.componentList.extend(self.tail_segments)
 
         for i, leg in enumerate(self.right_legs):
             self.componentDict[f'leg_r{i+1}_s1'] = leg[0]
