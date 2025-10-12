@@ -59,7 +59,6 @@ class ModelLinkage(Component):
         color_body = Ct.ColorType(0.8, 0.7, 0.5)  # Beige for the body
         color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
-
         # Setting Dimensions
         """
         Oval with size [0,8, 0,5, 1.5]
@@ -90,18 +89,18 @@ class ModelLinkage(Component):
         leg_r1_s1 = Cylinder(Point((0.5, 0, z_pos1)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_r1_s1)
         leg_r1_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_r1_s1.addChild(leg_r1_s2)
+        leg_r1_s1.addChild(leg_r1_s2)
         leg_r1_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_r1_s2.addChild(leg_r1_s3)
+        leg_r1_s2.addChild(leg_r1_s3)
         self.right_legs.append([leg_r1_s1, leg_r1_s2, leg_r1_s3])
-       
+
         # Left Leg (Mirrored)
         leg_l1_s1 = Cylinder(Point((-0.5, 0, z_pos1)), shaderProg, leg_s1_size, color_limbs)
-        self.body.addChild(leg_r1_s1)
+        self.body.addChild(leg_l1_s1)
         leg_l1_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_l1_s1.addChild(leg_r1_s2)
+        leg_l1_s1.addChild(leg_l1_s2)
         leg_l1_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_l1_s2.addChild(leg_r1_s3)
+        leg_l1_s2.addChild(leg_l1_s3)
         self.left_legs.append([leg_l1_s1, leg_l1_s2, leg_l1_s3])
         
         # Leg Pair 2
@@ -164,14 +163,44 @@ class ModelLinkage(Component):
         self.leg_l4_s2.addChild(leg_l4_s3)
         self.left_legs.append([leg_l4_s1, leg_l4_s2, leg_l4_s3])
         
-        self.componentList = [self.body]
-        self.componentDict = {
-            "body": self.body
-        }
+        # Horns: 2 Cones in the front
+        horn_size = [0.1, 0.1, 0.4]
+        self.horn_r = Cone(Point((0.2, 0.2, 0.75)), shaderProg, horn_size, color_body)
+        self.horn_l = Cone(Point((-0.2, 0.2, 0.75)), shaderProg, horn_size, color_body)
+        self.body.addChild(self.horn_r)
+        self.body.addChild(self.horn_l)
+
+        # 4-jointed Tail
+        tail_s1_size = [0.12, 0.12, 0.6]
+        tail_s2_size = [0.11, 0.11, 0.6]
+        tail_s3_size = [0.10, 0.10, 0.5]
+        tail_s4_size = [0.09, 0.09, 0.4]
+
+        self.tail_s1 = Cylinder(Point((0, 0, -0.75)), shaderProg, tail_s1_size, color_limbs)
+        self.body.addChild(self.tail_s1)
+        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_limbs)
+        self.tail_s1.addChild(self.tail_s2)
+        self.tail_s3 = Cylinder(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s3_size, color_limbs)
+        self.tail_s2.addChild(self.tail_s3)
+        self.tail_s4 = Cylinder(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s4_size, color_limbs)
+        self.tail_s3.addChild(self.tail_s4)
         
-        # Adding all the new leg components to the lists
-        for leg in self.right_legs + self.left_legs:
-            self.componentList.extend(leg)
+        # Shapes/Components Storage
+        # Initialize the lists with the body and horns
+        self.componentList = [self.body, self.horn_r, self.horn_l]
+        self.componentDict = {"body": self.body, "horn_r": self.horn_r, "horn_l": self.horn_l}
+
+        # Create the list of tail segments
+        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
+
+        # Add all the legs to the componentList
+        for leg_pair in self.right_legs + self.left_legs:
+            self.componentList.extend(leg_pair)
+
+        # Add the tail to the componentList
+        self.componentList.extend(self.tail_segments)
+
+        # Add all the legs to the componentDict
         for i, leg in enumerate(self.right_legs):
             self.componentDict[f'leg_r{i+1}_s1'] = leg[0]
             self.componentDict[f'leg_r{i+1}_s2'] = leg[1]
@@ -181,6 +210,10 @@ class ModelLinkage(Component):
             self.componentDict[f'leg_l{i+1}_s2'] = leg[1]
             self.componentDict[f'leg_l{i+1}_s3'] = leg[2]
 
+        # Add all the tail segments to the componentDict
+        for i, seg in enumerate(self.tail_segments):
+            self.componentDict[f'tail_s{i+1}'] = seg
+        
         ##### TODO 4: Define creature's joint behavior
         # Requirements:
         #   1. Set a reasonable rotation range for each joint,
