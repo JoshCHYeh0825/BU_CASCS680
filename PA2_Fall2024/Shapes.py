@@ -94,8 +94,8 @@ class Cone(Shape):
         # rather than around the object's true center
         glutility = GLUtility.GLUtility()
         if limb:
-            tIn = glutility.translate(0, 0, size[2], False)
-            tOut = glutility.translate(0, 0, -size[2], False)
+            tIn = glutility.translate(0, 0, size[2] / 2, False)
+            tOut = glutility.translate(0, 0, -size[2] / 2, False)
         else:
             tIn = np.identity(4)
             tOut = np.identity(4)
@@ -163,8 +163,8 @@ class Cylinder(Shape):
         # rather than around the object's true center
         glutility = GLUtility.GLUtility()
         if limb:
-            tIn = glutility.translate(0, 0, size[2], False)
-            tOut = glutility.translate(0, 0, -size[2], False)
+            tIn = glutility.translate(0, 0, size[2] / 2, False)
+            tOut = glutility.translate(0, 0, -size[2] / 2, False)
         else:
             tIn = np.identity(4)
             tOut = np.identity(4)

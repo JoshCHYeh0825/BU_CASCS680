@@ -137,6 +137,7 @@ class Sketch(CanvasBase):
         self.cameraDis = 6
         self.cameraPhi = math.pi / 6
         self.cameraTheta = math.pi / 2
+
         
     def InitGL(self):
         """
