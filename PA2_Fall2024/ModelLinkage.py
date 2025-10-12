@@ -78,6 +78,8 @@ class ModelLinkage(Component):
         self.left_legs = []
         color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
+        # Leg Pair 1
+        
         self.componentList = [self.body]
         self.componentDict = {
             "body": self.body
