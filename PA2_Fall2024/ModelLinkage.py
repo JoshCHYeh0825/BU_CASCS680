@@ -135,7 +135,8 @@ class ModelLinkage(Component):
 
         for leg_pair in self.right_legs + self.left_legs:
             self.componentList.extend(leg_pair)
-            self.componentList.extend(self.tail_segments)
+        
+        self.componentList.extend(self.tail_segments)
 
         for i, leg in enumerate(self.right_legs):
             self.componentDict[f'leg_r{i+1}_s1'] = leg[0]
