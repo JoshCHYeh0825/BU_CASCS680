@@ -15,6 +15,8 @@ from Point import Point
 import ColorType as Ct
 from Shapes import Cube
 from Shapes import Cylinder
+from Shapes import Cone
+from Shapes import Sphere
 import numpy as np
 
 
@@ -109,18 +111,18 @@ class ModelLinkage(Component):
         leg_r2_s1 = Cylinder(Point((0.5, 0, z_pos2)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_r2_s1)
         leg_r2_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_r2_s1.addChild(leg_r2_s2)
+        leg_r2_s1.addChild(leg_r2_s2)
         leg_r2_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_r2_s2.addChild(leg_r2_s3)
+        leg_r2_s2.addChild(leg_r2_s3)
         self.right_legs.append([leg_r2_s1, leg_r2_s2, leg_r2_s3])
         
         # Left Leg (Mirrored)
         leg_l2_s1 = Cylinder(Point((-0.5, 0, z_pos2)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_l2_s1)
         leg_l2_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_l2_s1.addChild(leg_l2_s2)
+        leg_l2_s1.addChild(leg_l2_s2)
         leg_l2_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_l2_s2.addChild(leg_l2_s3)
+        leg_l2_s2.addChild(leg_l2_s3)
         self.left_legs.append([leg_l2_s1, leg_l2_s2, leg_l2_s3])
         
         # Leg Pair 3
@@ -129,18 +131,18 @@ class ModelLinkage(Component):
         leg_r3_s1 = Cylinder(Point((0.5, 0, z_pos3)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_r3_s1)
         leg_r3_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_r3_s1.addChild(leg_r3_s2)
+        leg_r3_s1.addChild(leg_r3_s2)
         leg_r3_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_r3_s2.addChild(leg_r3_s3)
+        leg_r3_s2.addChild(leg_r3_s3)
         self.right_legs.append([leg_r3_s1, leg_r3_s2, leg_r3_s3])
         
         # Left Leg (Mirrored)
         leg_l3_s1 = Cylinder(Point((-0.5, 0, z_pos3)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_l3_s1)
         leg_l3_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_l3_s1.addChild(leg_l3_s2)
+        leg_l3_s1.addChild(leg_l3_s2)
         leg_l3_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_l3_s2.addChild(leg_l3_s3)
+        leg_l3_s2.addChild(leg_l3_s3)
         self.left_legs.append([leg_l3_s1, leg_l3_s2, leg_l3_s3])
         
         # Leg Pair 4
@@ -149,18 +151,18 @@ class ModelLinkage(Component):
         leg_r4_s1 = Cylinder(Point((0.5, 0, z_pos4)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_r4_s1)
         leg_r4_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_r4_s1.addChild(leg_r4_s2)
+        leg_r4_s1.addChild(leg_r4_s2)
         leg_r4_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_r4_s2.addChild(leg_r4_s3)
+        leg_r4_s2.addChild(leg_r4_s3)
         self.right_legs.append([leg_r4_s1, leg_r4_s2, leg_r4_s3])
         
         # Left Leg (Mirrored)
         leg_l4_s1 = Cylinder(Point((-0.5, 0, z_pos4)), shaderProg, leg_s1_size, color_limbs)
         self.body.addChild(leg_l4_s1)
         leg_l4_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
-        self.leg_l4_s1.addChild(leg_l4_s2)
+        leg_l4_s1.addChild(leg_l4_s2)
         leg_l4_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
-        self.leg_l4_s2.addChild(leg_l4_s3)
+        leg_l4_s2.addChild(leg_l4_s3)
         self.left_legs.append([leg_l4_s1, leg_l4_s2, leg_l4_s3])
         
         # Horns: 2 Cones in the front
