@@ -57,6 +57,8 @@ class ModelLinkage(Component):
         # Creating the body
         # Setting color for the creature
         color_body = Ct.ColorType(0.8, 0.7, 0.5)  # Beige for the body
+        color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
+
 
         # Setting Dimensions
         """
@@ -76,10 +78,36 @@ class ModelLinkage(Component):
         # Storing all leg components to left and right
         self.right_legs = []
         self.left_legs = []
-        color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
-
-        # Leg Pair 1
         
+        # Defining the size of the legs
+        leg_s1_size = [0.08, 0.08, 0.8]
+        leg_s2_size = [0.07, 0.07, 0.7]
+        leg_s3_size = [0.06, 0.06, 0.6]
+        
+        # Leg Pair 1
+        z_pos1 = 0.6
+        # Right Leg
+        leg_r1_s1 = Cylinder(Point((0.5, 0, z_pos1)), shaderProg, leg_s1_size, color_limbs)
+        self.body.addChild(leg_r1_s1)
+        leg_r1_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
+        self.body.addChild(leg_r1_s2)
+        leg_r1_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
+        self.body.addChild(leg_r1_s3)
+        self.right_legs.append([leg_r1_s1, leg_r1_s2, leg_r1_s3])
+       
+        # Left Leg (Mirrored)
+        leg_l1_s1 = Cylinder(Point((-0.5, 0, z_pos1)), shaderProg, leg_s1_size, color_limbs)
+        self.body.addChild(leg_r1_s1)
+        leg_l1_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs)
+        self.body.addChild(leg_r1_s2)
+        leg_l1_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs)
+        self.body.addChild(leg_r1_s3)
+        self.left_legs.append([leg_l1_s1, leg_l1_s2, leg_l1_s3])
+        
+        # Leg Pair 2
+        z_pos1 = 0.6
+        
+                
         self.componentList = [self.body]
         self.componentDict = {
             "body": self.body
