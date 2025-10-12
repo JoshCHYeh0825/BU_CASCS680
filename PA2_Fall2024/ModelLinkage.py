@@ -117,7 +117,7 @@ class ModelLinkage(Component):
         tail_s2_size = [0.11, 0.11, 0.6]
         tail_s3_size = [0.10, 0.10, 0.5]
         tail_s4_size = [0.09, 0.09, 0.4]
-
+        
         self.tail_s1 = Cylinder(Point((0, 0, -0.75)), shaderProg, tail_s1_size, color_limbs)
         self.body.addChild(self.tail_s1)
         self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_limbs)
@@ -126,23 +126,17 @@ class ModelLinkage(Component):
         self.tail_s2.addChild(self.tail_s3)
         self.tail_s4 = Cylinder(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s4_size, color_limbs)
         self.tail_s3.addChild(self.tail_s4)
+        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
         
         # Shapes/Components Storage
         # Initialize the lists with the body and horns
         self.componentList = [self.body, self.horn_r, self.horn_l]
         self.componentDict = {"body": self.body, "horn_r": self.horn_r, "horn_l": self.horn_l}
-
-        # Create the list of tail segments
-        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
-
-        # Add all the legs to the componentList
+        
         for leg_pair in self.right_legs + self.left_legs:
             self.componentList.extend(leg_pair)
-
-        # Add the tail to the componentList
         self.componentList.extend(self.tail_segments)
 
-        # Add all the legs to the componentDict
         for i, leg in enumerate(self.right_legs):
             self.componentDict[f'leg_r{i+1}_s1'] = leg[0]
             self.componentDict[f'leg_r{i+1}_s2'] = leg[1]
@@ -151,8 +145,6 @@ class ModelLinkage(Component):
             self.componentDict[f'leg_l{i+1}_s1'] = leg[0]
             self.componentDict[f'leg_l{i+1}_s2'] = leg[1]
             self.componentDict[f'leg_l{i+1}_s3'] = leg[2]
-
-        # Add all the tail segments to the componentDict
         for i, seg in enumerate(self.tail_segments):
             self.componentDict[f'tail_s{i+1}'] = seg
         
