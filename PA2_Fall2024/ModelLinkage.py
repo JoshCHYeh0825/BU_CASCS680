@@ -54,16 +54,29 @@ class ModelLinkage(Component):
         - No head, all on a body
         
         """
+        # Creating the body
         # Setting color for the creature
         color_body = Ct.ColorType(0.8, 0.7, 0.5)  # Beige for the body
-        color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
-        # Creating the body
-        # Oval with size [0,8, 0,5, 1.5]
-        # Beige color
-        # Body at origin 0, 0, 0
+        # Setting Dimensions
+        """
+        Oval with size [0,8, 0,5, 1.5]
+        Beige color
+        Body at origin 0, 0, 0
+        """
         self.body = Sphere(Point(0, 0, 0), shaderProg, [0.8, 0.5, 1.5], color_body, limb=False)
         self.addChild(self.body)
+
+        # 8 triple-jolinted limbs
+        """
+        8 limbs will be built using mirrored pairs (lefct and right).
+        Each leg will copntain 3 cylinder segments, each a child of the previous one to establish the triple-jointed nature
+        
+        """
+        # Storing all leg components to left and right
+        self.right_legs = []
+        self.left_legs = []
+        color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
 
         self.componentList = [self.body]
         self.componentDict = {
