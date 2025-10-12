@@ -83,52 +83,44 @@ class ModelLinkage(Component):
 
         # Attachment to body
         z_positions = [0.6, 0.2, -0.2, -0.6]
+        body_radius_x = 0.8
+        body_radius_y = 0.5
         
         # Using a loop to create the 4 pairs of legs
         for z_pos in z_positions:
             # First (upper) leg segment
-            leg_r_s1 = Cylinder(Point((0.5, -0.1, z_pos)), shaderProg, leg_s1_size, color_limbs, limb=True)
+            leg_r_s1 = Cylinder(Point((body_radius_x, -body_radius_y * 0.2, z_pos)), shaderProg, leg_s1_size, color_limbs, limb=True)
             self.body.addChild(leg_r_s1)
             
-            # Rotate outward (around z) and downward (around x)
-            leg_r_s1.setDefaultAngle(-40, leg_r_s1.vAxis)  # downward tilt
-            leg_r_s1.setDefaultAngle(30, leg_r_s1.wAxis)   # outward tilt
-
             # Second segment (middle joint)
             leg_r_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs_s2, limb=True)
             leg_r_s1.addChild(leg_r_s2)
-            leg_r_s2.setDefaultAngle(-50, leg_r_s2.vAxis)  # bend down
 
             # Third segment (lower joint)
             leg_r_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs_s3, limb=True)
             leg_r_s2.addChild(leg_r_s3)
-            leg_r_s3.setDefaultAngle(30, leg_r_s3.vAxis)   # small upward bend
 
             self.right_legs.append([leg_r_s1, leg_r_s2, leg_r_s3])
 
             # Left Leg (mirrored)
-            leg_l_s1 = Cylinder(Point((-0.5, -0.1, z_pos)), shaderProg, leg_s1_size, color_limbs, limb=True)
+            leg_l_s1 = Cylinder(Point((-body_radius_x, -body_radius_y * 0.2, z_pos)), shaderProg, leg_s1_size, color_limbs, limb=True)
             self.body.addChild(leg_l_s1)
 
             # Mirror local axes for left leg
             leg_l_s1.setU([-1, 0, 0])  # mirror x-axis
-            leg_l_s1.setDefaultAngle(-40, leg_l_s1.vAxis)  # downward tilt
-            leg_l_s1.setDefaultAngle(-30, leg_l_s1.wAxis)  # outward (mirrored) tilt
 
             leg_l_s2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_limbs_s2, limb=True)
             leg_l_s1.addChild(leg_l_s2)
-            leg_l_s2.setDefaultAngle(-50, leg_l_s2.uAxis)
 
             leg_l_s3 = Cylinder(Point((0, 0, leg_s2_size[2])), shaderProg, leg_s3_size, color_limbs_s3, limb=True)
             leg_l_s2.addChild(leg_l_s3)
-            leg_l_s3.setDefaultAngle(30, leg_l_s3.uAxis)
 
             self.left_legs.append([leg_l_s1, leg_l_s2, leg_l_s3])
         
         # Horns: 2 Cones in the front
         horn_size = [0.1, 0.1, 0.4]
-        self.horn_r = Cone(Point((0.2, 0.2, 0.75)), shaderProg, horn_size, color_body)
-        self.horn_l = Cone(Point((-0.2, 0.2, 0.75)), shaderProg, horn_size, color_body)
+        self.horn_r = Cone(Point((0.2, 0.2, 1.5)), shaderProg, horn_size, color_body)
+        self.horn_l = Cone(Point((-0.2, 0.2, 1.5)), shaderProg, horn_size, color_body)
         self.body.addChild(self.horn_r)
         self.body.addChild(self.horn_l)
 
@@ -138,11 +130,11 @@ class ModelLinkage(Component):
         tail_s3_size = [0.10, 0.10, 0.5]
         tail_s4_size = [0.09, 0.09, 0.4]
         
-        self.tail_s1 = Cylinder(Point((0, 0, -0.75)), shaderProg, tail_s1_size, color_limbs)
+        self.tail_s1 = Cylinder(Point((0, 0, -1.5)), shaderProg, tail_s1_size, color_limbs)
         self.body.addChild(self.tail_s1)
-        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_limbs)
+        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_limbs_s2)
         self.tail_s1.addChild(self.tail_s2)
-        self.tail_s3 = Cylinder(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s3_size, color_limbs)
+        self.tail_s3 = Cylinder(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s3_size, color_limbs_s3)
         self.tail_s2.addChild(self.tail_s3)
         self.tail_s4 = Cylinder(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s4_size, color_limbs)
         self.tail_s3.addChild(self.tail_s4)
@@ -169,6 +161,9 @@ class ModelLinkage(Component):
             self.componentDict[f'tail_s{i+1}'] = seg
         
         print(f"--- ModelLinkage initialized with {len(self.componentList)} components. ---")
+
+        self.setJointLimits()
+        self.setDefaultPose()
         
         ##### TODO 4: Define creature's joint behavior
         # Requirements:
@@ -176,33 +171,62 @@ class ModelLinkage(Component):
         #      so that creature won't intersect itself or bend in unnatural ways
         #   2. Orientation of joint rotations for the left and right parts should mirror each other.
         
-        # Segment 1 (Connects to body): Can sweep forward/back and flap up/down.
-        s1_u_range = [-70, 50]  # Flap range (around local x-axis)
-        s1_v_range = [-20, 90]  # Sweep range (around local y-axis)
-
-        # Segment 2 (Knee): Can only bend one way.
-        s2_u_range = [0, 140]   # Bend range
-        
-        # Segment 3 (Foot): Can flex up and down.
-        s3_u_range = [-60, 60]  # Flex range
+    def setJointLimits(self):
+        # Define rotation extents for all creature joints
+            
+        # Leg rotation limits
+        s1_u, s1_v = [-70, 50], [-20, 90]
+        s2_u = [0, 140]
+        s3_u = [-60, 60]
 
         for i in range(len(self.right_legs)):
-            # Right legs
-            self.right_legs[i][0].setRotateExtent(self.right_legs[i][0].uAxis, s1_u_range[0], s1_u_range[1])
-            self.right_legs[i][0].setRotateExtent(self.right_legs[i][0].vAxis, s1_v_range[0], s1_v_range[1])
-            self.right_legs[i][1].setRotateExtent(self.right_legs[i][1].uAxis, s2_u_range[0], s2_u_range[1])
-            self.right_legs[i][2].setRotateExtent(self.right_legs[i][2].uAxis, s3_u_range[0], s3_u_range[1])
+            # Right leg limits
+            upper, mid, low = self.right_legs[i]
+            upper.setRotateExtent(upper.uAxis, *s1_u)
+            upper.setRotateExtent(upper.vAxis, *s1_v)
+            mid.setRotateExtent(mid.uAxis, *s2_u)
+            low.setRotateExtent(low.uAxis, *s3_u)
 
-            # Left legs (mirrored sweep range)
-            self.left_legs[i][0].setRotateExtent(self.left_legs[i][0].uAxis, s1_u_range[0], s1_u_range[1])
-            self.left_legs[i][0].setRotateExtent(self.left_legs[i][0].vAxis, -s1_v_range[1], -s1_v_range[0]) # Mirrored
-            self.left_legs[i][1].setRotateExtent(self.left_legs[i][1].uAxis, s2_u_range[0], s2_u_range[1])
-            self.left_legs[i][2].setRotateExtent(self.left_legs[i][2].uAxis, s3_u_range[0], s3_u_range[1])
-            
-        # --- Set Joint Limits for Tail ---
-        tail_u_range = [-45, 45] # Wag left/right
-        tail_v_range = [-20, 60] # Curl up/down
-
+            # Left leg limits (mirror v-axis)
+            upper, mid, low = self.left_legs[i]
+            upper.setRotateExtent(upper.uAxis, *s1_u)
+            upper.setRotateExtent(upper.vAxis, -s1_v[1], -s1_v[0])
+            mid.setRotateExtent(mid.uAxis, *s2_u)
+            low.setRotateExtent(low.uAxis, *s3_u)
+    
+        # Tail
+        tail_u, tail_v = [-45, 45], [-20, 60]
         for seg in self.tail_segments:
-            seg.setRotateExtent(seg.uAxis, tail_u_range[0], tail_u_range[1])
-            seg.setRotateExtent(seg.vAxis, tail_v_range[0], tail_v_range[1])
+            seg.setRotateExtent(seg.uAxis, *tail_u)
+            seg.setRotateExtent(seg.vAxis, *tail_v)
+
+        # Horns 
+        horn_u = [-30, 30]
+        self.horn_r.setRotateExtent(self.horn_r.uAxis, *horn_u)
+        self.horn_l.setRotateExtent(self.horn_l.uAxis, *horn_u)
+        
+    def setDefaultPose(self):    
+        # Set default angles to form a natural resting pos
+        for i in range(len(self.right_legs)):
+            # Right
+            upper, mid, low = self.right_legs[i]
+            upper.setDefaultAngle(-30, upper.uAxis)
+            upper.setDefaultAngle(20, upper.vAxis)
+            mid.setDefaultAngle(45, mid.uAxis)
+            low.setDefaultAngle(-20, low.uAxis)
+
+            # Left (mirror sweep)
+            upper, mid, low = self.left_legs[i]
+            upper.setDefaultAngle(-30, upper.uAxis)
+            upper.setDefaultAngle(-20, upper.vAxis)
+            mid.setDefaultAngle(45, mid.uAxis)
+            low.setDefaultAngle(-20, low.uAxis)
+
+        # Tail
+        for i, seg in enumerate(self.tail_segments):
+            seg.setDefaultAngle(10 * i, seg.vAxis)   # curl upward gradually
+            seg.setDefaultAngle((-1)**i * 5, seg.uAxis)  # slight wag pattern
+
+        # Horns
+        self.horn_r.setDefaultAngle(20, self.horn_r.uAxis)
+        self.horn_l.setDefaultAngle(-20, self.horn_l.uAxis)
