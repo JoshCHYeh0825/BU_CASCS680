@@ -222,9 +222,9 @@ class Component:
         # e.g. self.transformationMat = C @ B @ A 
 
         # Change only this line!
-        myTransformation = translationMat @ rotationMatW @ rotationMatV @ rotationMatU @ scalingMat
-
-        self.transformationMat = parentTransformationMat @ self.postRotationMat @ myTransformation @ self.preRotationMat 
+        myTransformation = self.postRotationMat @ rotationMatW @ rotationMatV @ rotationMatU @ scalingMat @ self.preRotationMat
+        
+        self.transformationMat = parentTransformationMat @ translationMat @ myTransformation
 
         for c in self.children:
             c.update(self.transformationMat)
