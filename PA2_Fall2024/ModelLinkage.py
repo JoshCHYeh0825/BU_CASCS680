@@ -67,7 +67,7 @@ class ModelLinkage(Component):
         Beige color
         Body at origin 0, 0, 0
         """
-        self.body = Sphere(Point(0, 0, 0), shaderProg, [0.8, 0.5, 1.5], color_body, limb=False)
+        self.body = Sphere(Point((0, 0, 0)), shaderProg, [0.8, 0.5, 1.5], color_body, limb=False)
         self.addChild(self.body)
 
         # 8 triple-jolinted limbs
