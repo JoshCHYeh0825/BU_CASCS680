@@ -57,8 +57,8 @@ class ModelLinkage(Component):
         # Setting color for the creature
         color_body = Ct.ColorType(0.8, 0.7, 0.5)  # Beige for the body
         color_limbs = Ct.ColorType(0.6, 0.5, 0.3)  # Darker color for limbs
-        color_limbs_s2 = Ct.ColorType(1, 0, 0)     # Color distinction for each segment
-        color_limbs_s3 = Ct.ColorType(0, 0, 1)
+        color_limbs_s2 = Ct.ColorType(1, 0.5, 0)     # Color distinction for each segment
+        color_limbs_s3 = Ct.ColorType(0, 0.5, 1)
 
         # Body
         body_size = [0.7, 0.4, 1.2]
