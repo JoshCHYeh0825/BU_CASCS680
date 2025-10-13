@@ -212,3 +212,48 @@ class ModelLinkage(Component):
         # Tail points up
         for i, seg in enumerate(self.tail_segments):
             seg.setDefaultAngle(-20 - i * 10, seg.uAxis)   # Curl each segment upward
+            
+    def pose_idle(self):
+        # Default position
+        self.setDefaultPose()
+        
+    def pose_attack(self):
+        # tail up, legs flared
+        for leg in self.right_legs + self.left_legs:
+            upper, mid, low = leg
+            upper.setDefaultAngle(60, upper.uAxis)
+            mid.setDefaultAngle(-80, mid.uAxis)
+            low.setDefaultAngle(30, low.uAxis)
+        for seg in self.tail_segments:
+            seg.setDefaultAngle(-70, seg.uAxis)
+    
+    def pose_jump(self):
+        # All legs bent  
+        for leg in self.right_legs + self.left_legs:
+            upper, mid, low = leg
+            upper.setDefaultAngle(80, upper.uAxis)
+            mid.setDefaultAngle(-100, mid.uAxis)
+            low.setDefaultAngle(60, low.uAxis)
+        for seg in self.tail_segments:
+            seg.setDefaultAngle(-90, seg.uAxis)
+
+    def pose_crawl(self):
+        # Crawling pose
+        for i, leg in enumerate(self.right_legs + self.left_legs):
+            upper, mid, low = leg
+            offset = 10 if i % 2 == 0 else -10
+            upper.setDefaultAngle(30 + offset, upper.uAxis)
+            mid.setDefaultAngle(-40, mid.uAxis)
+            low.setDefaultAngle(15, low.uAxis)
+        for seg in self.tail_segments:
+            seg.setDefaultAngle(-30, seg.uAxis)
+
+    def pose_curl(self):
+        # Tail curled into the body
+        for seg in self.tail_segments:
+            seg.setDefaultAngle(-110, seg.uAxis)
+        for leg in self.right_legs + self.left_legs:
+            upper, mid, low = leg
+            upper.setDefaultAngle(20, upper.uAxis)
+            mid.setDefaultAngle(-60, mid.uAxis)
+            low.setDefaultAngle(40, low.uAxis)

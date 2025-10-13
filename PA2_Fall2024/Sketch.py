@@ -420,50 +420,92 @@ class Sketch(CanvasBase):
         # that can be indexed by name (e.g. self.cDict["leg1"] instead of self.components[10])
 
         key_map = {
-            '1': "leg_r1_s1", '2': "leg_r1_s2", '3': "leg_r1_s3",
-            '4': "tail_s1", '5': "tail_s2", '6': "tail_s3", '7': "tail_s4",
-            '8': "leg_l1_s1", '9': "leg_l1_s2", '0': "leg_l2_s3"
-            }
+            '1': ["leg_r1_s1", "leg_r1_s2", "leg_r1_s3",
+                  "leg_l1_s1", "leg_l1_s2", "leg_l1_s3"],
+            '2': ["leg_r2_s1", "leg_r2_s2", "leg_r2_s3",
+                  "leg_l2_s1", "leg_l2_s2", "leg_l2_s3"],
+            '3': ["leg_r3_s1", "leg_r3_s2", "leg_r3_s3",
+                  "leg_l3_s1", "leg_l3_s2", "leg_l3_s3"],
+            '4': ["leg_r4_s1", "leg_r4_s2", "leg_r4_s3",
+                  "leg_l4_s1", "leg_l4_s2", "leg_l4_s3"],
+            '5': ["tail_s1", "tail_s2"],
+            '6': ["tail_s3", "tail_s4"]
+        }
+        
+        # Ctrl + number → toggle a limb group (multi-select)
+        if wx.GetKeyState(wx.WXK_CONTROL):
+            key_char = chr(keycode)
+            if key_char in key_map:
+                group = key_map[key_char]
+                for part in group:
+                    if part in self.multi_select_list:
+                        # Deselect part and reset color
+                        self.multi_select_list.remove(part)
+                        self.cDict[part].reset("color")
+                        print(f"Deselected {part}")
+                    else:
+                        # Select part and highlight in orange
+                        self.multi_select_list.append(part)
+                        self.cDict[part].setCurrentColor(ColorType.ColorType(1.0, 0.6, 0.1))
+                        print(f"Selected {part}")
+                self.update()
+            return
         
         if keycode in [wx.WXK_RETURN]:
             # enter component editing mode
-
             self.select_axis_index = 0
-
             if len(self.components) > 0:
                 # reset color of last selected component
                 self.components[self.select_obj_index].reset("color")
                 # set new selected component & its color
                 self.select_obj_index = (self.select_obj_index + 1) % len(self.components)
                 self.components[self.select_obj_index].setCurrentColor(self.select_color[self.select_axis_index])
-                
             self.update()
+            
         if keycode in [wx.WXK_LEFT]:
             # Last rotation axis of this component
             self.select_axis_index = (self.select_axis_index - 1) % 3
             if self.select_obj_index >= 0:
                 self.components[self.select_obj_index].setCurrentColor(self.select_color[self.select_axis_index])
             self.update()
+            
         if keycode in [wx.WXK_RIGHT]:
             # Next rotation axis of this component
             self.select_axis_index = (self.select_axis_index + 1) % 3
             if self.select_obj_index >= 0:
                 self.components[self.select_obj_index].setCurrentColor(self.select_color[self.select_axis_index])
             self.update()
+            
         if keycode in [wx.WXK_UP]:
-            # Increase rotation angle
-            self.Interrupt_Scroll(1)
+            # Rotate all selected parts upward
+            if self.multi_select_list:
+                for name in self.multi_select_list:
+                    self.cDict[name].rotate(5, self.cDict[name].uAxis)
+            else:
+                self.Interrupt_Scroll(1)
             self.update()
+            
         if keycode in [wx.WXK_DOWN]:
-            # Decrease rotation angle
-            self.Interrupt_Scroll(-1)
+            # Rotate all selected parts downward
+            if self.multi_select_list:
+                for name in self.multi_select_list:
+                    self.cDict[name].rotate(-5, self.cDict[name].uAxis)
+            else:
+                self.Interrupt_Scroll(-1)
             self.update()
+            
         if keycode in [wx.WXK_ESCAPE]:
             # exit component editing mode
             self.components[self.select_obj_index].reset("color")
             self.select_obj_index = -1
             self.select_axis_index = -1
             self.update()
+            for part in self.multi_select_list:
+                self.cDict[part].reset("color")
+            self.multi_select_list.clear()
+            print("Cleared all selections.")
+            self.update()
+            
         if chr(keycode) in "r":
             # reset viewing angle only
             self.resetView()
@@ -474,6 +516,25 @@ class Sketch(CanvasBase):
             self.resetView()
             self.select_obj_index = -1
             self.select_axis_index = -1
+            self.update()
+            
+        # Mapping to different poses (When CNTRL not pressed)
+        if not wx.GetKeyState(wx.WXK_CONTROL):
+            if chr(keycode) == "1":
+                self.topLevelComponent.children[0].pose_idle()
+                print("Pose: Idle")
+            elif chr(keycode) == "2":
+                self.topLevelComponent.children[0].pose_attack()
+                print("Pose: Attack")
+            elif chr(keycode) == "3":
+                self.topLevelComponent.children[0].pose_jump()
+                print("Pose: Jump")
+            elif chr(keycode) == "4":
+                self.topLevelComponent.children[0].pose_crawl()
+                print("Pose: Crawl")
+            elif chr(keycode) == "5":
+                self.topLevelComponent.children[0].pose_curl()
+                print("Pose: Curl")
             self.update()
 
 
