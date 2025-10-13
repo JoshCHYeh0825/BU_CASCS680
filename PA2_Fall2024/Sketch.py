@@ -259,17 +259,23 @@ class Sketch(CanvasBase):
         # Calculate the direction vector from the eye to the mouse
         direction = (mouse_world_pos - eye_pos).normalize()
         
-        # --- Quaternion Approach (for Extra Credit) ---
         # The default forward direction is the negative Z axis
         forward = Point((0, 0, -1))
         
         # Calculate rotation axis and angle
-        axis = forward.cross(direction).normalize()
-        angle_rad = math.acos(forward.dot(direction))
+        axis = forward.cross3d(direction).normalize()
+        angle_rad = math.acos(max(-1, min(1, forward.dot(direction))))
+        
+        # Limit pupil rotation range
+        max_angle = math.radians(20)
+        angle_rad = np.clip(angle_rad, -max_angle, max_angle)
         
         # Create a quaternion from this axis and angle
-        q = Quaternion.fromAxisAngle(axis.getCoords(), angle_rad)
-        
+        x, y, z = axis.getCoords()
+        s = math.cos(angle_rad / 2)
+        v_scale = math.sin(angle_rad / 2)
+        q = Quaternion(s, x * v_scale, y * v_scale, z * v_scale).normalize()
+
         # Apply the quaternion to the pupil
         pupil.setQuaternion(q)
         

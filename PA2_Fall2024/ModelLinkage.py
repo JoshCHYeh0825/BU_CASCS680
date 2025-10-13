@@ -126,12 +126,12 @@ class ModelLinkage(Component):
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
         
         # Eye
-        sclera_size = [0.15, 0.15, 0.15]
-        self.sclera = Sphere(Point((0, 0.2, 0.6)), shaderProg, sclera_size, Ct.WHITE, limb=False)
+        sclera_size = [0.25, 0.25, 0.25]   # Medium-sized black outer eye
+        self.sclera = Sphere(Point((0, 0.15, 0.75)), shaderProg, sclera_size, Ct.BLACK, limb=False)
         self.body.addChild(self.sclera)
-
-        pupil_size = [0.07, 0.07, 0.07]
-        self.pupil = Sphere(Point((0, 0, 0.075)), shaderProg, pupil_size, Ct.BLACK, limb=False)
+        
+        pupil_size = [0.10, 0.10, 0.10]
+        self.pupil = Sphere(Point((0, 0, 0.15)), shaderProg, pupil_size, Ct.WHITE, limb=False)
         self.sclera.addChild(self.pupil)
         
         # Components Storage
@@ -204,14 +204,15 @@ class ModelLinkage(Component):
 
         for leg in self.left_legs:
             upper, mid, low = leg
-            upper.setDefaultAngle(50, upper.uAxis)  # Same downward flap
+            upper.setDefaultAngle(50, upper.uAxis)
             upper.setDefaultAngle(-45, upper.vAxis)  # MIRRORED outward sweep
-            mid.setDefaultAngle(-75, mid.uAxis)       # Same knee bend
-            low.setDefaultAngle(35, low.uAxis)      # Same foot bend
+            mid.setDefaultAngle(-75, mid.uAxis)
+            low.setDefaultAngle(35, low.uAxis)
 
-        # Tail points up
+        # Tail laid completely flat along Z-axis
         for i, seg in enumerate(self.tail_segments):
-            seg.setDefaultAngle(-20 - i * 10, seg.uAxis)   # Curl each segment upward
+            seg.setDefaultAngle(0, seg.uAxis)   # No upward curl
+            seg.setDefaultAngle(0, seg.vAxis)   # No side roll
             
     def pose_idle(self):
         # Default position
