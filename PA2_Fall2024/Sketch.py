@@ -130,6 +130,9 @@ class Sketch(CanvasBase):
         self.resetView()
 
         self.glutility = GLUtility.GLUtility()
+        
+        # multiselect
+        self.multi_select_list = []
 
     def resetView(self):
         self.lookAtPt = [0, 0, 0]
@@ -137,7 +140,6 @@ class Sketch(CanvasBase):
         self.cameraDis = 6
         self.cameraPhi = math.pi / 6
         self.cameraTheta = math.pi / 2
-
         
     def InitGL(self):
         """
@@ -242,7 +244,36 @@ class Sketch(CanvasBase):
         # The eye rotation only needs to work correctly when the creature is looking toward the viewer.
         # You do not need to account for other camera orientations.
         # Try to implement this using quaternions for additional credit!
-        return
+        mouse_world_pos = self.unprojectCanvas(x, y, 0.9) # 0.9 is distance from camera
+        
+        # Get the eye components from the dictionary
+        sclera = self.cDict.get("sclera")
+        pupil = self.cDict.get("pupil")
+        if not pupil or not sclera:
+            return
+
+        # The transformation matrix of the parent (sclera) tells us its world position and orientation
+        sclera_world_mat = sclera.transformationMat
+        eye_pos = Point(sclera_world_mat[3, 0:3])
+
+        # Calculate the direction vector from the eye to the mouse
+        direction = (mouse_world_pos - eye_pos).normalize()
+        
+        # --- Quaternion Approach (for Extra Credit) ---
+        # The default forward direction is the negative Z axis
+        forward = Point((0, 0, -1))
+        
+        # Calculate rotation axis and angle
+        axis = forward.cross(direction).normalize()
+        angle_rad = math.acos(forward.dot(direction))
+        
+        # Create a quaternion from this axis and angle
+        q = Quaternion.fromAxisAngle(axis.getCoords(), angle_rad)
+        
+        # Apply the quaternion to the pupil
+        pupil.setQuaternion(q)
+        
+        self.update()
 
     def Interrupt_Scroll(self, wheelRotation):
         """
@@ -387,7 +418,13 @@ class Sketch(CanvasBase):
         # Create five unique poses to demonstrate your creature's joint rotations.
         # HINT: selecting individual components is easier if you create a dictionary of components (self.cDict)
         # that can be indexed by name (e.g. self.cDict["leg1"] instead of self.components[10])
-            
+
+        key_map = {
+            '1': "leg_r1_s1", '2': "leg_r1_s2", '3': "leg_r1_s3",
+            '4': "tail_s1", '5': "tail_s2", '6': "tail_s3", '7': "tail_s4",
+            '8': "leg_l1_s1", '9': "leg_l1_s2", '0': "leg_l2_s3"
+            }
+        
         if keycode in [wx.WXK_RETURN]:
             # enter component editing mode
 
