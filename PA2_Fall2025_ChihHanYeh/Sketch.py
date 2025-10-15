@@ -252,37 +252,41 @@ class Sketch(CanvasBase):
         if not pupil or not sclera:
             return
 
-        # The transformation matrix of the parent (sclera) tells us its world position and orientation
+        # Get the sclera's world transformation matrix and position
         sclera_world_mat = sclera.transformationMat
-        eye_center = Point(sclera_world_mat[3, 0:3])
+        sclera_world_pos = Point(sclera_world_mat[3, 0:3])
 
-        # Calculate the direction vector from the eye to the mouse
-        direction = (mouse_world_pos - eye_center).normalize()
+        # Calculate the desired "look" direction in WORLD space
+        world_direction = (mouse_world_pos - sclera_world_pos).normalize()
         
-        # The default forward direction is the negative Z axis
-        forward = Point((0, 0, -1))
+        # Convert the world direction into the SCLERA'S LOCAL space
+        sclera_rot_mat_inv = sclera_world_mat[0:3, 0:3].T
+        local_direction_coords = sclera_rot_mat_inv @ world_direction.getCoords()
+        local_direction = Point(local_direction_coords)
+        
+        # The default forward direction is the Z axis
+        forward = Point((0, 0, 1))
         
         # Find rotation axis & angle
-        axis = forward.cross3d(direction)
-        axis_len = np.linalg.norm(axis.getCoords())
-        if axis_len < 1e-6:
-            sclera.clearQuaternion()
+        axis = forward.cross3d(local_direction).normalize()
+        
+        if np.linalg.norm(axis.getCoords()) < 1e-6:
+            pupil.clearQuaternion()
+            self.update()
             return
         
-        axis = axis.normalize()
-        # angle between forward and direction
-        cos_ang = max(-1.0, min(1.0, forward.dot(direction)))
+        cos_ang = max(-1.0, min(1.0, forward.dot(local_direction)))
         angle = math.acos(cos_ang)
         
-        # clamp angle so the eye doesn't rotate too much
-        max_angle = math.radians(30.0)
+        # Clamp the angle to a reasonable range
+        max_angle = math.radians(45.0)
         angle = np.clip(angle, -max_angle, max_angle)
         
-        # build quaternion (s, v) from axis-angle
+        # 5. Build and apply the quaternion to the PUPIL
         s = math.cos(angle / 2.0)
         v_scale = math.sin(angle / 2.0)
         ax, ay, az = axis.getCoords()
-        q = Quaternion(s, ax * v_scale, ay * v_scale, az * v_scale).normalize()
+        q = Quaternion(s, ax * v_scale, ay * v_scale, az * v_scale)
         
         pupil.setQuaternion(q)
 
