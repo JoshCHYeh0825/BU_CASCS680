@@ -126,14 +126,15 @@ class ModelLinkage(Component):
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
         
         # Eye
-        sclera_size = [0.25, 0.25, 0.25]   # Medium-sized black outer eye
+        sclera_size = [0.20, 0.20, 0.20]
         self.sclera = Sphere(Point((0, 0.15, 0.75)), shaderProg, sclera_size, Ct.BLACK, limb=False)
         self.body.addChild(self.sclera)
         
         pupil_size = [0.10, 0.10, 0.10]
         self.pupil = Sphere(Point((0, 0, 0.15)), shaderProg, pupil_size, Ct.WHITE, limb=False)
         self.sclera.addChild(self.pupil)
-        
+        self.pupil_offset = np.array([0.0, 0.0, 0.1])  # base offset along z
+
         # Components Storage
         self.componentList = [self.body]
         self.componentDict = {"body": self.body}
@@ -163,7 +164,7 @@ class ModelLinkage(Component):
         #   1. Set a reasonable rotation range for each joint,
         #      so that creature won't intersect itself or bend in unnatural ways
         #   2. Orientation of joint rotations for the left and right parts should mirror each other.
-        
+ 
     def setJointLimits(self):
         # Define rotation extents for all creature joints
             

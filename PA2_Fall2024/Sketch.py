@@ -254,31 +254,38 @@ class Sketch(CanvasBase):
 
         # The transformation matrix of the parent (sclera) tells us its world position and orientation
         sclera_world_mat = sclera.transformationMat
-        eye_pos = Point(sclera_world_mat[3, 0:3])
+        eye_center = Point(sclera_world_mat[3, 0:3])
 
         # Calculate the direction vector from the eye to the mouse
-        direction = (mouse_world_pos - eye_pos).normalize()
+        direction = (mouse_world_pos - eye_center).normalize()
         
         # The default forward direction is the negative Z axis
         forward = Point((0, 0, -1))
         
-        # Calculate rotation axis and angle
-        axis = forward.cross3d(direction).normalize()
-        angle_rad = math.acos(max(-1, min(1, forward.dot(direction))))
+        # Find rotation axis & angle
+        axis = forward.cross3d(direction)
+        axis_len = np.linalg.norm(axis.getCoords())
+        if axis_len < 1e-6:
+            sclera.clearQuaternion()
+            return
         
-        # Limit pupil rotation range
-        max_angle = math.radians(20)
-        angle_rad = np.clip(angle_rad, -max_angle, max_angle)
+        axis = axis.normalize()
+        # angle between forward and direction
+        cos_ang = max(-1.0, min(1.0, forward.dot(direction)))
+        angle = math.acos(cos_ang)
         
-        # Create a quaternion from this axis and angle
-        x, y, z = axis.getCoords()
-        s = math.cos(angle_rad / 2)
-        v_scale = math.sin(angle_rad / 2)
-        q = Quaternion(s, x * v_scale, y * v_scale, z * v_scale).normalize()
+        # clamp angle so the eye doesn't rotate too much
+        max_angle = math.radians(30.0)
+        angle = np.clip(angle, -max_angle, max_angle)
+        
+        # build quaternion (s, v) from axis-angle
+        s = math.cos(angle / 2.0)
+        v_scale = math.sin(angle / 2.0)
+        ax, ay, az = axis.getCoords()
+        q = Quaternion(s, ax * v_scale, ay * v_scale, az * v_scale).normalize()
+        
+        sclera.setQuaternion(q)
 
-        # Apply the quaternion to the pupil
-        pupil.setQuaternion(q)
-        
         self.update()
 
     def Interrupt_Scroll(self, wheelRotation):
@@ -454,6 +461,7 @@ class Sketch(CanvasBase):
                         self.multi_select_list.append(part)
                         self.cDict[part].setCurrentColor(ColorType.ColorType(1.0, 0.6, 0.1))
                         print(f"Selected {part}")
+                    print("Multi-select list:", self.multi_select_list)
                 self.update()
             return
         
