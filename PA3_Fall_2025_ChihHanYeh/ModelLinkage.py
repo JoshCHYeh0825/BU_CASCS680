@@ -10,7 +10,7 @@ Modified by Daniel Scrivener 08/2022
 import random
 
 from Component import Component
-from Shapes import Cube
+from Shapes import Cube, Cone, Cylinder, Sphere
 from Point import Point
 import ColorType as Ct
 from EnvironmentObject import EnvironmentObject
@@ -52,6 +52,73 @@ except ImportError:
 #         least one moving part.
 #         3. The predator and prey should have distinguishable different colors.
 #         4. You are welcome to reuse your PA2 creature in this assignment.
+
+class TadpolePrey(Component, EnvironmentObject):
+    "Simple prey creature with the appearance of a tadpole"
+    
+    def __init__(self, parent, position, shaderProg):
+        super().__init__(position) # Call Component's init
+        self.contextParent = parent
+        self.species_id = 2 # ID for Prey
+        
+        # Setting colors
+        color_body = Ct.ColorType(0.8, 0.7, 0.5); # light brown/beige
+        color_tail = Ct.ColorType(0.6, 0.5, 0.3) # A slightly darker shade for the tail
+        
+        # Setting shapes for the creature
+        # Main body -- Parent
+        body_size = [0.4, 0.4, 0.6] # Egg-shaped
+        self.body = Sphere(Point((0, 0, 0)), shaderProg, body_size, color_body, limb=False)
+        self.addChild(self.body)
+
+        # Tail
+        # Segment 1 - Moving cylinder Attached to the back of the body
+        tail_s1_size = [0.08, 0.08, 0.4]
+        self.tail_s1 = Cylinder(Point((0, 0, -body_size[2]/2)), shaderProg, tail_s1_size, color_tail)
+        self.body.addChild(self.tail_s1)
+
+        # Segment 2 - Cone tip attached to segment 1
+        tail_s2_size = [0.08, 0.08, 0.2] # Cone: radius, radius, length
+        self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
+        self.tail_s1.addChild(self.tail_s2)
+
+        # Components Storage
+        self.tail_segments = [self.tail_s1, self.tail_s2]
+        self.components = [self.body, self.tail_s1, self.tail_s2]
+        self.componentList = self.components
+        self.componentDict = {
+            "body": self.body,
+            "tail_s1": self.tail_s1,
+            "tail_s2": self.tail_s2
+        }
+
+        # Animation & Collision
+        self.tail_wiggle_speed = 3.0 # Degrees per frame for side-to-side motion
+        self.translation_speed = Point([random.uniform(-0.02, 0.02) for _ in range(3)])
+        self.bound_center = Point((0,0,0))
+        self.bound_radius = body_size[2] # Bounding sphere based on body length
+
+        # Set Pose and Limits
+        self.setJointLimits()
+        self.setDefaultPose()
+
+    def setJointLimits(self):
+        # Tail segment 1 wiggles left/right around the vertical (Y/v) axis
+        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -45, 45)
+
+    def setDefaultPose(self):
+        # Start with tail straight
+        self.tail_s1.setDefaultAngle(0, self.tail_s1.vAxis)
+
+    def animationUpdate(self):
+        # Wiggle tail
+        self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
+
+        # Check limits and reverse direction
+        if self.tail_s1.vAngle in self.tail_s1.vRange:
+             self.tail_wiggle_speed *= -1
+
+        self.update() # Apply transformations
 
 class Linkage(Component, EnvironmentObject):
     """
