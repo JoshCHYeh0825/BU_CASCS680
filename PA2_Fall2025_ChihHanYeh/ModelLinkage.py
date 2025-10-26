@@ -123,7 +123,9 @@ class ModelLinkage(Component):
         self.tail_s2.addChild(self.tail_s3)
         self.tail_s4 = Cylinder(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s4_size, color_limbs)
         self.tail_s3.addChild(self.tail_s4)
-        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4]
+        self.tail_s5 = Cylinder(Point((0, 0, tail_s4_size[2])), shaderProg, tail_s1_size, color_limbs)
+        self.tail_s4.addChild(self.tail_s5)
+        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3, self.tail_s4, self.tail_s5]
         
         # Eye
         sclera_size = [0.20, 0.20, 0.20]
@@ -134,6 +136,7 @@ class ModelLinkage(Component):
         self.pupil = Sphere(Point((0, 0, 0.15)), shaderProg, pupil_size, Ct.WHITE, limb=False)
         self.sclera.addChild(self.pupil)
         self.pupil_offset = np.array([0.0, 0.0, 0.1])  # base offset along z
+        
 
         # Components Storage
         self.componentList = [self.body]
