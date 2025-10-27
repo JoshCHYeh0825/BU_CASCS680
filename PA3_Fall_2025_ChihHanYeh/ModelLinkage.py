@@ -57,17 +57,17 @@ class TadpolePrey(Component, EnvironmentObject):
     "Simple prey creature with the appearance of a tadpole"
     
     def __init__(self, parent, position, shaderProg):
-        super().__init__(position) # Call Component's init
+        super().__init__(position)  # Call Component's init
         self.contextParent = parent
-        self.species_id = 2 # ID for Prey
+        self.species_id = 2     # ID for Prey
         
         # Setting colors
-        color_body = Ct.ColorType(0.8, 0.7, 0.5); # light brown/beige
-        color_tail = Ct.ColorType(0.6, 0.5, 0.3) # A slightly darker shade for the tail
+        color_body = Ct.ColorType(0.8, 0.7, 0.5)    # light brown/beige
+        color_tail = Ct.ColorType(0.6, 0.5, 0.3)    # A slightly darker shade
         
         # Setting shapes for the creature
         # Main body -- Parent
-        body_size = [0.4, 0.4, 0.6] # Egg-shaped
+        body_size = [0.4, 0.4, 0.6]     # Egg-shaped
         self.body = Sphere(Point((0, 0, 0)), shaderProg, body_size, color_body, limb=False)
         self.addChild(self.body)
 
