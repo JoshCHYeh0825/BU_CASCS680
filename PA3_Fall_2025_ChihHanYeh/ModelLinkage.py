@@ -205,7 +205,7 @@ class Predator(Component, EnvironmentObject):
         # Wiggle tail
         self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
         if self.tail_s1.vAngle in self.tail_s1.vRange:
-             self.tail_wiggle_speed *= -1
+            self.tail_wiggle_speed *= -1
 
         # Snap pincers
         self.pincer_r1.rotate(self.pincer_snap_speed, self.pincer_r1.vAxis)
@@ -213,7 +213,7 @@ class Predator(Component, EnvironmentObject):
         # Reverse both if one hits limit
         if self.pincer_r1.vAngle in self.pincer_r1.vRange or \
            self.pincer_l1.vAngle in self.pincer_l1.vRange:
-             self.pincer_snap_speed *= -1
+               self.pincer_snap_speed *= -1
 
         self.update()
 class Linkage(Component, EnvironmentObject):
