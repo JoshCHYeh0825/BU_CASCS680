@@ -54,8 +54,9 @@ except ImportError:
 #         4. You are welcome to reuse your PA2 creature in this assignment.
 
 class Prey(Component, EnvironmentObject):
-    "Prey: Creature with the appearance of a tadpole"
-    
+    """
+    Prey: Creature with the appearance of a tadpole
+    """
     def __init__(self, parent, position, shaderProg):
         super().__init__(position)  # Call Component's init
         self.contextParent = parent
@@ -121,7 +122,9 @@ class Prey(Component, EnvironmentObject):
         self.update() # Apply transformations
 
 class Predator(Component, EnvironmentObject):
-    "Predator: Similar to prey but green and have moving pincers"
+    """
+    Predator: Similar to prey but green and have moving pincers
+    """
     def __init__(self, parent, position, shaderProg):
         super().__init__(position)  # Call Component's init
         self.contextParent = parent
