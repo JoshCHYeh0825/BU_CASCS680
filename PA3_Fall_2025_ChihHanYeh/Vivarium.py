@@ -53,16 +53,16 @@ class Vivarium(Component):
         # Adding the creatures: 2 preys, 1 predator
         # Adding the predator, setting up initial position then instantiating
         predator_start = Point([random.uniform(-self.tank_dimensions[i] * 0.8, self.tank_dimensions[i] * 0.8) for i in range(3)])
-        eater = Predator(parent, predator_start, shaderProg)  # Use parent from Sketch
-        self.addNewObjInTank(eater)
-        self.creatures.append(eater)
+        Hunter = Predator(parent, predator_start, shaderProg)  # Use parent from Sketch
+        self.addNewObjInTank(Hunter)
+        self.creatures.append(Hunter)
             
         # Adding the prey, setting up initial position then instantiating 2 with a for loop
         for _ in range(2):
             prey_pos = Point([random.uniform(-self.tank_dimensions[i] * 0.8, self.tank_dimensions[i] * 0.8) for i in range(3)])
-            eaten = Prey(parent, prey_pos, shaderProg)  # Use parent from Sketch
-            self.addNewObjInTank(eaten)
-            self.creatures.append(eaten)
+            Hunted = Prey(parent, prey_pos, shaderProg)  # Use parent from Sketch
+            self.addNewObjInTank(Hunted)
+            self.creatures.append(Hunted)
         
     def animationUpdate(self):
         """

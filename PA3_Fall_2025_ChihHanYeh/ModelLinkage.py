@@ -61,6 +61,7 @@ class Prey(Component, EnvironmentObject):
         super().__init__(position)  # Call Component's init
         self.contextParent = parent
         self.species_id = 2  # ID for Prey
+        self.eaten = False
         
         # Setting colors
         color_body = Ct.ColorType(0.8, 0.7, 0.5)  # light brown/beige
