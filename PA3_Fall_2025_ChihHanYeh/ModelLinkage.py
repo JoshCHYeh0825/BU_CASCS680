@@ -60,11 +60,11 @@ class Prey(Component, EnvironmentObject):
     def __init__(self, parent, position, shaderProg):
         super().__init__(position)  # Call Component's init
         self.contextParent = parent
-        self.species_id = 2     # ID for Prey
+        self.species_id = 2  # ID for Prey
         
         # Setting colors
-        color_body = Ct.ColorType(0.8, 0.7, 0.5)    # light brown/beige
-        color_tail = Ct.ColorType(0.6, 0.5, 0.3)    # A slightly darker shade
+        color_body = Ct.ColorType(0.8, 0.7, 0.5)  # light brown/beige
+        color_tail = Ct.ColorType(0.6, 0.5, 0.3)  # A slightly darker shade
         
         # Setting shapes for the creature
         # Main body -- Parent
@@ -79,7 +79,7 @@ class Prey(Component, EnvironmentObject):
         self.body.addChild(self.tail_s1)
 
         # Segment 2 - Cone tip attached to segment 1
-        tail_s2_size = [0.08, 0.08, 0.2] # Cone: radius, radius, length
+        tail_s2_size = [0.08, 0.08, 0.2]  # Cone: radius, radius, length
         self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
@@ -94,10 +94,10 @@ class Prey(Component, EnvironmentObject):
         }
 
         # Animation & Collision
-        self.tail_wiggle_speed = 3.0 # Degrees per frame for side-to-side motion
+        self.tail_wiggle_speed = 3.0  # Degrees per frame for side-to-side motion
         self.translation_speed = Point([random.uniform(-0.02, 0.02) for _ in range(3)])
-        self.bound_center = Point((0,0,0))
-        self.bound_radius = body_size[2] # Bounding sphere based on body length
+        self.bound_center = Point((0, 0, 0))
+        self.bound_radius = body_size[2]  # Bounding sphere based on body length
 
         # Set Pose and Limits
         self.setJointLimits()
@@ -117,9 +117,9 @@ class Prey(Component, EnvironmentObject):
 
         # Check limits and reverse direction
         if self.tail_s1.vAngle in self.tail_s1.vRange:
-             self.tail_wiggle_speed *= -1
+            self.tail_wiggle_speed *= -1
 
-        self.update() # Apply transformations
+        self.update()  # Apply transformations
 
 class Predator(Component, EnvironmentObject):
     """
@@ -147,7 +147,7 @@ class Predator(Component, EnvironmentObject):
         self.tail_s1 = Cylinder(Point((0, 0, -body_size[2]/2)), shaderProg, tail_s1_size, color_tail)
         self.body.addChild(self.tail_s1)
         # Segment 2 - Cone tip attached to segment 1
-        tail_s2_size = [0.1, 0.1, 0.25] # Cone: radius, radius, length
+        tail_s2_size = [0.1, 0.1, 0.25]  # Cone: radius, radius, length
         self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
@@ -187,8 +187,8 @@ class Predator(Component, EnvironmentObject):
         self.tail_wiggle_speed = 3.5
         self.pincer_snap_speed = 2.0
         self.translation_speed = Point([random.uniform(-0.015, 0.015) for _ in range(3)])
-        self.bound_center = Point((0,0,0))
-        self.bound_radius = body_size[2] * 1.1 # Based on body length
+        self.bound_center = Point((0, 0, 0))
+        self.bound_radius = body_size[2] * 1.1  # Based on body length
 
         # Set Pose and Limits
         self.setJointLimits()
@@ -214,9 +214,8 @@ class Predator(Component, EnvironmentObject):
         self.pincer_r1.rotate(self.pincer_snap_speed, self.pincer_r1.vAxis)
         self.pincer_l1.rotate(-self.pincer_snap_speed, self.pincer_l1.vAxis) # Mirrored
         # Reverse both if one hits limit
-        if self.pincer_r1.vAngle in self.pincer_r1.vRange or \
-           self.pincer_l1.vAngle in self.pincer_l1.vRange:
-               self.pincer_snap_speed *= -1
+        if self.pincer_r1.vAngle in self.pincer_r1.vRange or self.pincer_l1.vAngle in self.pincer_l1.vRange:
+            self.pincer_snap_speed *= -1
 
         self.update()
 class Linkage(Component, EnvironmentObject):
