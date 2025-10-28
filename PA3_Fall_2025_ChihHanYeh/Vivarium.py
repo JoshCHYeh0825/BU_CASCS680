@@ -39,7 +39,7 @@ class Vivarium(Component):
         self.shaderProg = shaderProg
 
         self.tank_dimensions = [4, 4, 4]
-        tank = Tank(Point((0,0,0)), shaderProg, self.tank_dimensions)
+        tank = Tank(Point((0, 0, 0)), shaderProg, self.tank_dimensions)
         super(Vivarium, self).__init__(Point((0, 0, 0)))
 
         # Build relationship

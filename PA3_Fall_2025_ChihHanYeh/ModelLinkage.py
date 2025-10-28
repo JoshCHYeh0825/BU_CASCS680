@@ -158,13 +158,13 @@ class Predator(Component, EnvironmentObject):
         pincer_attach_x = body_size[0]/2        # Attach to the sides
         
         # Right Pincer
-        self.pincer_r1 = Cylinder(Point((pincer_attach_x, 0, pincer_attach_z)), shaderProg, pincer_s1_size, color_limbs)
+        self.pincer_r1 = Cylinder(Point((pincer_attach_x, 0, pincer_attach_z)), shaderProg, pincer_s1_size, color_pincer)
         self.body.addChild(self.pincer_r1)
         self.pincer_r2 = Cone(Point((0, 0, pincer_s1_size[2])), shaderProg, pincer_s2_size, color_pincer)
         self.pincer_r1.addChild(self.pincer_r2)
 
         # Left Pincer (Mirrored)
-        self.pincer_l1 = Cylinder(Point((-pincer_attach_x, 0, pincer_attach_z)), shaderProg, pincer_s1_size, color_limbs)
+        self.pincer_l1 = Cylinder(Point((-pincer_attach_x, 0, pincer_attach_z)), shaderProg, pincer_s1_size, color_pincer)
         self.body.addChild(self.pincer_l1)
         self.pincer_l2 = Cone(Point((0, 0, pincer_s1_size[2])), shaderProg, pincer_s2_size, color_pincer)
         self.pincer_l1.addChild(self.pincer_l2)            
