@@ -8,7 +8,8 @@ First version at 09/28/2021
 Modified by Daniel Scrivener 08/2022
 """
 import random
-
+import numpy as np
+import math
 from Component import Component
 from Shapes import Cube, Cone, Cylinder, Sphere
 from Point import Point
@@ -122,9 +123,58 @@ class Prey(Component, EnvironmentObject):
 
         self.update()  # Apply transformations
     
-    def stepForward(self, components, tank_dimensions, vivarium):        
+    def stepForward(self, components, tank_dimensions, vivarium): 
+        # TODO 3: Interact with the environment
+       
         # Current World position (stored in components)
         current_world_pos = Point(self.transformationMat[3, 0:3])
+        new_pos_world = current_world_pos + self.translation_speed
+        
+        # Tank Wall Collision 
+        for i in range(3):
+            # Check positive wall
+            if new_pos_world[i] + self.bound_radius > tank_dimensions[i]:
+                self.translation_speed[i] *= -1  # Reverse speed
+                new_pos_world[i] = tank_dimensions[i] - self.bound_radius  # Place against wall
+            # Check negative wall
+            elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]:
+                self.translation_speed[i] *= -1  # Reverse speed
+                new_pos_world[i] = -tank_dimensions[i] + self.bound_radius  # Place against wall
+
+        # Creature Interaction
+        for other_obj in components:
+            if other_obj is self or not isinstance(other_obj, EnvironmentObject):
+                continue  # Skip non-creatures
+
+            other_world_pos = Point(other_obj.transformationMat[3, 0:3])
+            dist_vec = new_pos_world - other_world_pos
+            dist_sq = dist_vec.norm2()
+            radii_sum = self.bound_radius + other_obj.bound_radius
+
+            # Collision Check
+            if dist_sq < radii_sum * radii_sum:  # Bounding spheres overlap
+                if other_obj.species_id == 1:  # Collided with a Predator
+                    self.eaten = True # Add an 'eaten' flag
+                elif other_obj.species_id == self.species_id: # Collided with another Prey
+                    if dist_sq > 1e-6:  # Avoid division by zero if perfectly overlapped
+                        collision_normal = dist_vec.normalize()
+                        self.translation_speed = self.translation_speed.reflect(collision_normal)
+                        # Move slightly apart to prevent sticking
+                        separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
+                        new_pos_world = new_pos_world + collision_normal * separation
+
+            # Potential Function
+            elif other_obj.species_id == 1:  # If it's a predator nearby
+                avoidance_radius_sq = (self.bound_radius * 5) ** 2  # Flee if predator is within 5 radii
+                if dist_sq < avoidance_radius_sq:
+                    # Add a force pushing away from the predator
+                    flee_force = dist_vec.normalize() * 0.005  # Adjust strength as needed
+                    self.translation_speed = (self.translation_speed + flee_force).normalize() * self.translation_speed.norm()  # Maintain speed
+
+        # Update Position 
+        # Convert world position back to position relative to parent (Vivarium origin)
+        self.setCurrentPosition(new_pos_world)
+   
         
 class Predator(Component, EnvironmentObject):
     """
@@ -180,7 +230,7 @@ class Predator(Component, EnvironmentObject):
         self.left_pincer = [self.pincer_l1, self.pincer_l2]
         # Include ALL parts for animation and selection
         self.components = [self.body] + self.tail_segments + self.right_pincer + self.left_pincer
-        self.componentList = self.components # For Sketch.py
+        self.componentList = self.components  # For Sketch.py
         self.componentDict = {
             "body": self.body,
             "tail_s1": self.tail_s1, "tail_s2": self.tail_s2,
@@ -223,6 +273,55 @@ class Predator(Component, EnvironmentObject):
             self.pincer_snap_speed *= -1
 
         self.update()
+        
+        def stepForward(self, components, tank_dimensions, vivarium):
+            # TODO 3: Interact with the environment
+
+            # Calculate New Position
+            current_world_pos = Point(self.transformationMat[3, 0:3])
+            new_pos_world = current_world_pos + self.translation_speed
+
+            # Tank Wall Collision
+            for i in range(3):
+                if abs(new_pos_world[i]) + self.bound_radius > tank_dimensions[i]:
+                    self.translation_speed[i] *= -1
+                    new_pos_world[i] = np.sign(new_pos_world[i]) * (tank_dimensions[i] - self.bound_radius)  # Clamp position
+                # elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]: # Check negative wall too
+                #     self.translation_speed[i] *= -1
+                #     new_pos_world[i] = -tank_dimensions[i] + self.bound_radius
+
+            # Creature Interaction
+            for other_obj in components:
+                if other_obj is self or not isinstance(other_obj, EnvironmentObject):
+                    continue
+
+                other_world_pos = Point(other_obj.transformationMat[3, 0:3])
+                dist_vec = new_pos_world - other_world_pos
+                dist_sq = dist_vec.norm2()
+                radii_sum = self.bound_radius + other_obj.bound_radius
+
+                # Collision Check
+                if dist_sq < radii_sum * radii_sum:
+                    if other_obj.species_id == 2:  # Collided with Prey
+                        pass  # Predator doesn't need to do anything special here
+                    elif other_obj.species_id == self.species_id:  # Collided with non-preys
+                        if dist_sq > 1e-6:
+                            collision_normal = dist_vec.normalize()
+                            self.translation_speed = self.translation_speed.reflect(collision_normal)
+                            separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
+                            new_pos_world = new_pos_world + collision_normal * separation
+
+                # Potential Function
+                elif other_obj.species_id == 2:  # If it's prey nearby
+                    chase_radius_sq = (self.bound_radius * 8) ** 2  # Chase if prey is within 8 radii
+                    if dist_sq < chase_radius_sq:
+                        # Add a force pulling towards the prey
+                        chase_force = -dist_vec.normalize() * 0.008  # Adjust strength as needed
+                        self.translation_speed = (self.translation_speed + chase_force).normalize() * self.translation_speed.norm()
+
+            # Update Position
+            self.setCurrentPosition(new_pos_world)
+            
 class Linkage(Component, EnvironmentObject):
     """
     A Linkage with animation enabled and is defined as an object in environment
