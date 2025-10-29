@@ -96,7 +96,7 @@ class Prey(Component, EnvironmentObject):
         }
 
         # Animation & Collision
-        self.tail_wiggle_speed = 3.0  # Degrees per frame for side-to-side motion
+        self.tail_wiggle_speed = 0.5  # Degrees per frame for side-to-side motion
         self.translation_speed = Point([random.uniform(-0.02, 0.02) for _ in range(3)])
         self.bound_center = Point((0, 0, 0))
         self.bound_radius = body_size[2]  # Bounding sphere based on body length
@@ -239,8 +239,8 @@ class Predator(Component, EnvironmentObject):
         }
 
         # Animation & Collision Setup
-        self.tail_wiggle_speed = 3.5
-        self.pincer_snap_speed = 2.0
+        self.tail_wiggle_speed = 0.5
+        self.pincer_snap_speed = 0.5
         self.translation_speed = Point([random.uniform(-0.015, 0.015) for _ in range(3)])
         self.bound_center = Point((0, 0, 0))
         self.bound_radius = body_size[2] * 1.1  # Based on body length
@@ -274,53 +274,53 @@ class Predator(Component, EnvironmentObject):
 
         self.update()
         
-        def stepForward(self, components, tank_dimensions, vivarium):
-            # TODO 3: Interact with the environment
+    def stepForward(self, components, tank_dimensions, vivarium):
+        # TODO 3: Interact with the environment
 
-            # Calculate New Position
-            current_world_pos = Point(self.transformationMat[3, 0:3])
-            new_pos_world = current_world_pos + self.translation_speed
+        # Calculate New Position
+        current_world_pos = Point(self.transformationMat[3, 0:3])
+        new_pos_world = current_world_pos + self.translation_speed
 
-            # Tank Wall Collision
-            for i in range(3):
-                if abs(new_pos_world[i]) + self.bound_radius > tank_dimensions[i]:
-                    self.translation_speed[i] *= -1
-                    new_pos_world[i] = np.sign(new_pos_world[i]) * (tank_dimensions[i] - self.bound_radius)  # Clamp position
-                # elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]: # Check negative wall too
-                #     self.translation_speed[i] *= -1
-                #     new_pos_world[i] = -tank_dimensions[i] + self.bound_radius
+        # Tank Wall Collision
+        for i in range(3):
+            if abs(new_pos_world[i]) + self.bound_radius > tank_dimensions[i]:
+                self.translation_speed[i] *= -1
+                new_pos_world[i] = np.sign(new_pos_world[i]) * (tank_dimensions[i] - self.bound_radius)  # Clamp position
+            # elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]: # Check negative wall too
+            #     self.translation_speed[i] *= -1
+            #     new_pos_world[i] = -tank_dimensions[i] + self.bound_radius
 
-            # Creature Interaction
-            for other_obj in components:
-                if other_obj is self or not isinstance(other_obj, EnvironmentObject):
-                    continue
+        # Creature Interaction
+        for other_obj in components:
+            if other_obj is self or not isinstance(other_obj, EnvironmentObject):
+                continue
 
-                other_world_pos = Point(other_obj.transformationMat[3, 0:3])
-                dist_vec = new_pos_world - other_world_pos
-                dist_sq = dist_vec.dot(dist_vec)
-                radii_sum = self.bound_radius + other_obj.bound_radius
+            other_world_pos = Point(other_obj.transformationMat[3, 0:3])
+            dist_vec = new_pos_world - other_world_pos
+            dist_sq = dist_vec.dot(dist_vec)
+            radii_sum = self.bound_radius + other_obj.bound_radius
 
-                # Collision Check
-                if dist_sq < radii_sum * radii_sum:
-                    if other_obj.species_id == 2:  # Collided with Prey
-                        pass  # Predator doesn't need to do anything special here
-                    elif other_obj.species_id == self.species_id:  # Collided with non-preys
-                        if dist_sq > 1e-6:
-                            collision_normal = dist_vec.normalize()
-                            self.translation_speed = self.translation_speed.reflect(collision_normal)
-                            separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
-                            new_pos_world = new_pos_world + collision_normal * separation
+            # Collision Check
+            if dist_sq < radii_sum * radii_sum:
+                if other_obj.species_id == 2:  # Collided with Prey
+                    pass  # Predator doesn't need to do anything special here
+                elif other_obj.species_id == self.species_id:  # Collided with non-preys
+                    if dist_sq > 1e-6:
+                        collision_normal = dist_vec.normalize()
+                        self.translation_speed = self.translation_speed.reflect(collision_normal)
+                        separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
+                        new_pos_world = new_pos_world + collision_normal * separation
 
-                # Potential Function
-                elif other_obj.species_id == 2:  # If it's prey nearby
-                    chase_radius_sq = (self.bound_radius * 8) ** 2  # Chase if prey is within 8 radii
-                    if dist_sq < chase_radius_sq:
-                        # Add a force pulling towards the prey
-                        chase_force = -dist_vec.normalize() * 0.008  # Adjust strength as needed
-                        self.translation_speed = (self.translation_speed + chase_force).normalize() * self.translation_speed.norm()
+            # Potential Function
+            elif other_obj.species_id == 2:  # If it's prey nearby
+                chase_radius_sq = (self.bound_radius * 8) ** 2  # Chase if prey is within 8 radii
+                if dist_sq < chase_radius_sq:
+                    # Add a force pulling towards the prey
+                    chase_force = -dist_vec.normalize() * 0.008  # Adjust strength as needed
+                    self.translation_speed = (self.translation_speed + chase_force).normalize() * self.translation_speed.norm()
 
-            # Update Position
-            self.setCurrentPosition(new_pos_world)
+        # Update Position
+        self.setCurrentPosition(new_pos_world)
             
 class Linkage(Component, EnvironmentObject):
     """
