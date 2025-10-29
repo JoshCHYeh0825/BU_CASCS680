@@ -121,7 +121,11 @@ class Prey(Component, EnvironmentObject):
             self.tail_wiggle_speed *= -1
 
         self.update()  # Apply transformations
-
+    
+    def stepForward(self, components, tank_dimensions, vivarium):        
+        # Current World position (stored in components)
+        current_world_pos = Point(self.transformationMat[3, 0:3])
+        
 class Predator(Component, EnvironmentObject):
     """
     Predator: Similar to prey but green and have moving pincers

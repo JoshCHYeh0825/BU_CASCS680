@@ -69,11 +69,9 @@ class Vivarium(Component):
         Update all creatures in vivarium
         """
             
-        for c in self.components[::-1]:
-            if isinstance(c, EnvironmentObject):
-                c.animationUpdate()
-                c.stepForward(self.components, self.tank_dimensions, self)
-        
+        for creature in self.creatures[::-1]:
+            creature.animationUpdate()  # Pass self.creatures
+            creature.stepForward(self.creatures, self.tank_dimensions, self)
         self.update()
 
     def delObjInTank(self, obj):
