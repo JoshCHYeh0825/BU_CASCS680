@@ -337,7 +337,7 @@ class Linkage(Component, EnvironmentObject):
     components = None
     rotation_speed = None
     translation_speed = None
-
+    
     def __init__(self, parent, position, shaderProg):
         super(Linkage, self).__init__(position)
         arm1 = ModelArm(parent, Point((0, 0, 0)), shaderProg, 0.1)
@@ -409,8 +409,7 @@ class Linkage(Component, EnvironmentObject):
         #           2. Collision between the same species: They should bounce apart from each other. You can use a
         #           reflection vector about a plane to decide the after-collision direction.
         #       3. You are welcome to use bounding spheres for collision detection.
-
-        pass
+        
 
 class ModelArm(Component):
     """
