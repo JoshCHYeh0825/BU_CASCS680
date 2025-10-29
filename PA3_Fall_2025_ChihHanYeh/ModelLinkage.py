@@ -59,8 +59,6 @@ class Prey(Component, EnvironmentObject):
     Prey: Creature with the appearance of a tadpole
     """
     def __init__(self, parent, position, shaderProg):
-        super().__init__(position)  # Call Component's init
-        self.contextParent = parent
         self.species_id = 2  # ID for Prey
         self.eaten = False
         
@@ -70,19 +68,25 @@ class Prey(Component, EnvironmentObject):
         
         # Setting shapes for the creature
         # Main body -- Parent
-        body_size = [0.4, 0.4, 0.6]     # Egg-shaped
+        body_size = [0.4, 0.4, 0.6]  # Egg-shaped
+        super().__init__(position)
+        self.contextParent = parent
+        
+        # Body Shape
         self.body = Sphere(Point((0, 0, 0)), shaderProg, body_size, color_body, limb=False)
         self.addChild(self.body)
 
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.08, 0.08, 0.4]
-        self.tail_s1 = Cylinder(Point((0, 0, -body_size[2])), shaderProg, tail_s1_size, color_tail)
+        tail_s1_attach_z = -body_size[2] - (tail_s1_size[2] / 2.0)
+        self.tail_s1 = Cylinder(Point((0, 0, (-1 * tail_s1_attach_z))), shaderProg, tail_s1_size, color_tail)
         self.body.addChild(self.tail_s1)
 
         # Segment 2 - Cone tip attached to segment 1
         tail_s2_size = [0.08, 0.08, 0.2]  # Cone: radius, radius, length
-        self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
+        tail_s2_attach_z = -(tail_s1_size[2] / 2.0) - (tail_s2_size[2] / 2.0)
+        self.tail_s2 = Cone(Point((0, 0, tail_s2_attach_z)), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Components Storage
@@ -90,7 +94,7 @@ class Prey(Component, EnvironmentObject):
         self.components = [self.body, self.tail_s1, self.tail_s2]
         self.componentList = self.components
         self.componentDict = {
-            "body": self.body,
+            "body": self.body, 
             "tail_s1": self.tail_s1,
             "tail_s2": self.tail_s2
         }
@@ -181,7 +185,6 @@ class Predator(Component, EnvironmentObject):
     Predator: Similar to prey but green and have moving pincers
     """
     def __init__(self, parent, position, shaderProg):
-        super().__init__(position)  # Call Component's init
         self.contextParent = parent
         self.species_id = 1         # ID for Prey
         
@@ -192,18 +195,23 @@ class Predator(Component, EnvironmentObject):
         
         # Setting shapes for the creature
         # Main body -- Parent
-        body_size = [0.5, 0.5, 0.7]     # Larger than prey
+        body_size = [0.5, 0.5, 0.7]  # Larger than prey
+        super().__init__(position)
+        self.contextParent = parent
+
         self.body = Sphere(Point((0, 0, 0)), shaderProg, body_size, color_body, limb=False)
         self.addChild(self.body)
 
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.1, 0.1, 0.5]
-        self.tail_s1 = Cylinder(Point((0, 0, -body_size[2])), shaderProg, tail_s1_size, color_tail)
-        self.body.addChild(self.tail_s1)
+        tail_s1_attach_z = -body_size[2] - (tail_s1_size[2] / 2.0)
+        self.tail_s1 = Cylinder(Point((0, 0, (-1 * tail_s1_attach_z))), shaderProg, tail_s1_size, color_tail)
+        self.addChild(self.tail_s1)
         # Segment 2 - Cone tip attached to segment 1
-        tail_s2_size = [0.1, 0.1, 0.25]  # Cone: radius, radius, length
-        self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
+        tail_s2_size = [0.1, 0.1, 0.25]
+        tail_s2_attach_z = -(tail_s1_size[2] / 2.0) - (tail_s2_size[2] / 2.0)
+        self.tail_s2 = Cone(Point((0, 0, tail_s2_attach_z)), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Pincer
