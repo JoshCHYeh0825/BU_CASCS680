@@ -148,7 +148,7 @@ class Prey(Component, EnvironmentObject):
 
             other_world_pos = Point(other_obj.transformationMat[3, 0:3])
             dist_vec = new_pos_world - other_world_pos
-            dist_sq = dist_vec.norm2()
+            dist_sq = dist_vec.dot(dist_vec)
             radii_sum = self.bound_radius + other_obj.bound_radius
 
             # Collision Check
@@ -297,7 +297,7 @@ class Predator(Component, EnvironmentObject):
 
                 other_world_pos = Point(other_obj.transformationMat[3, 0:3])
                 dist_vec = new_pos_world - other_world_pos
-                dist_sq = dist_vec.norm2()
+                dist_sq = dist_vec.dot(dist_vec)
                 radii_sum = self.bound_radius + other_obj.bound_radius
 
                 # Collision Check
