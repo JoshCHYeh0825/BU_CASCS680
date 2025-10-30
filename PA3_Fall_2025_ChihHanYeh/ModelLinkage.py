@@ -11,6 +11,7 @@ import random
 import numpy as np
 import math
 from Component import Component
+from Quaternion import Quaternion
 from Shapes import Cube, Cone, Cylinder, Sphere
 from Point import Point
 import ColorType as Ct
@@ -79,13 +80,14 @@ class Prey(Component, EnvironmentObject):
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.08, 0.08, 0.4]
-        self.tail_s1 = Cylinder(Point((0, 0, ((-body_size[2]) - (tail_s1_size[2] / 2.0)))), shaderProg, tail_s1_size, color_tail)
+        self.tail_s1 = Cylinder(Point((0, 0, -body_size[2])), shaderProg, tail_s1_size, color_tail)
+        tail_rot_Mat = self.glUtility.rotate(180, self.vAxis, False)
+        self.tail_s1.setPreRotation(tail_rot_Mat)
         self.body.addChild(self.tail_s1)
 
         # Segment 2 - Cone tip attached to segment 1
         tail_s2_size = [0.08, 0.08, 0.2]  # Cone: radius, radius, length
-        tail_s2_attach_z = -(tail_s1_size[2] / 2.0) - (tail_s2_size[2] / 2.0)
-        self.tail_s2 = Cone(Point((0, 0, tail_s2_attach_z)), shaderProg, tail_s2_size, color_tail)
+        self.tail_s2 = Cone(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Components Storage
@@ -203,13 +205,15 @@ class Predator(Component, EnvironmentObject):
 
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
-        tail_s1_size = [0.1, 0.1, 0.5]
-        self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] - (tail_s1_size[2] / 2.0)))), shaderProg, tail_s1_size, color_tail)
+        tail_s1_size = [0.1, 0.1, 0.4]
+        self.tail_s1 = Cylinder(Point((0, 0, -body_size[2])), shaderProg, tail_s1_size, color_tail)
+        tail_rot_Mat = self.glUtility.rotate(180, self.vAxis, False)
+        self.tail_s1.setPreRotation(tail_rot_Mat)
         self.body.addChild(self.tail_s1)
+        
         # Segment 2 - Cone tip attached to segment 1
-        tail_s2_size = [0.1, 0.1, 0.25]
-        tail_s2_attach_z = -(tail_s1_size[2] / 2.0) - (tail_s2_size[2] / 2.0)
-        self.tail_s2 = Cone(Point((0, 0, tail_s2_attach_z)), shaderProg, tail_s2_size, color_tail)
+        tail_s2_size = [0.1, 0.1, 0.2]
+        self.tail_s2 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Pincer
@@ -259,34 +263,72 @@ class Predator(Component, EnvironmentObject):
         self.setDefaultPose()
 
     def setJointLimits(self):
-        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -45, 45) # Wiggle L/R
-        self.pincer_r1.setRotateExtent(self.pincer_r1.vAxis, -10, 30) # Open/Close R
-        self.pincer_l1.setRotateExtent(self.pincer_l1.vAxis, -30, 10) # Open/Close L (mirrored)
+        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -45, 45)  # Wiggle L/R
+        self.pincer_r1.setRotateExtent(self.pincer_r1.vAxis, -10, 30)  # Open/Close R
+        self.pincer_l1.setRotateExtent(self.pincer_l1.vAxis, -30, 10)  # Open/Close L (mirrored)
 
     def setDefaultPose(self):
         self.tail_s1.setDefaultAngle(0, self.tail_s1.vAxis)
         self.pincer_r1.setDefaultAngle(15, self.pincer_r1.vAxis) # Pincers start slightly open
         self.pincer_l1.setDefaultAngle(-15, self.pincer_l1.vAxis)
+    
+    def rotateDirection(self, target_dir):
+        # Establish creature's local axis and basis for front facing directions
+        forward_v = Point([0, 0, 1])
+        target_dir.normalize()
+        dot_prod = forward_v.dot(target_dir)
+        q = Quaternion()
+        
+        # Edge cases
+        if dot_prod > 0.999:
+            self.clearQuaternion()
+            return        
+        elif dot_prod < -0.999:
+            # Flip and face backwards
+            angle = math.pi
+            # Calculate quarternion components (s, v0 to v2)
+            s = math.cos(angle / 2.0)
+            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
+            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
+            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
+            q.set(s, v0, v1, v2)
+        else:
+            # Standard cases
+            axis = forward_v.cross3d(target_dir).normalize()
+            angle = math.acos(dot_prod)
+            half_sin = math.sin(angle / 2.0)
+            half_cos = math.cos(angle / 2.0)
+            
+            q.set(half_cos, 
+                  (axis[0] * half_sin), 
+                  (axis[1] * half_sin), 
+                  (axis[2] * half_sin))
+            
+        self.setQuaternion(q)
 
     def animationUpdate(self):
         # Wiggle tail
         self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
-        if self.tail_s1.vAngle in self.tail_s1.vRange:
+        if self.tail_s1.vAngle == self.tail_s1.vRange[0] or \
+           self.tail_s1.vAngle == self.tail_s1.vRange[1]:
             self.tail_wiggle_speed *= -1
 
         # Snap pincers
         self.pincer_r1.rotate(self.pincer_snap_speed, self.pincer_r1.vAxis)
         self.pincer_l1.rotate(-self.pincer_snap_speed, self.pincer_l1.vAxis) # Mirrored
         # Reverse both if one hits limit
-        if self.pincer_r1.vAngle in self.pincer_r1.vRange or self.pincer_l1.vAngle in self.pincer_l1.vRange:
+        if self.pincer_r1.vAngle == self.pincer_r1.vRange[0] or \
+           self.pincer_r1.vAngle == self.pincer_r1.vRange[1] or \
+           self.pincer_l1.vAngle == self.pincer_l1.vRange[0] or \
+           self.pincer_l1.vAngle == self.pincer_l1.vRange[1]:
             self.pincer_snap_speed *= -1
-
+            
         self.update()
         
     def stepForward(self, components, tank_dimensions, vivarium):
         
         # Creature's current position
-        current_pos = self.position.coords
+        current_pos = self.currentPos.coords
         # Probe the next position
         nextPos = current_pos + self.direction * self.step_size
 
@@ -298,12 +340,14 @@ class Predator(Component, EnvironmentObject):
         if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2.0) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2.0)):
             self.direction[2] *= -1
 
-        # Calculate the final position using the (potentially) updated direction
-        finalPos = self.position.coords + self.direction * self.step_size
-
+        # Calculate the final position
+        finalPos = self.currentPos.coords + self.direction * self.step_size
         # Update the creature's position
-        self.position = Point(finalPos)
-            
+        self.setCurrentPosition(Point(finalPos)) 
+        # Update creature's orientation        
+        self.rotateDirection(Point(self.direction))
+
+
 class Linkage(Component, EnvironmentObject):
     """
     A Linkage with animation enabled and is defined as an object in environment
