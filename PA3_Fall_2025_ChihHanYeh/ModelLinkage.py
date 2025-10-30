@@ -79,8 +79,7 @@ class Prey(Component, EnvironmentObject):
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.08, 0.08, 0.4]
-        tail_s1_attach_z = -body_size[2] - (tail_s1_size[2] / 2.0)
-        self.tail_s1 = Cylinder(Point((0, 0, (-1 * tail_s1_attach_z))), shaderProg, tail_s1_size, color_tail)
+        self.tail_s1 = Cylinder(Point((0, 0, ((-body_size[2]) - (tail_s1_size[2] / 2.0)))), shaderProg, tail_s1_size, color_tail)
         self.body.addChild(self.tail_s1)
 
         # Segment 2 - Cone tip attached to segment 1
@@ -205,8 +204,7 @@ class Predator(Component, EnvironmentObject):
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.1, 0.1, 0.5]
-        tail_s1_attach_z = -body_size[2] - (tail_s1_size[2] / 2.0)
-        self.tail_s1 = Cylinder(Point((0, 0, (-1 * tail_s1_attach_z))), shaderProg, tail_s1_size, color_tail)
+        self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] - (tail_s1_size[2] / 2.0)))), shaderProg, tail_s1_size, color_tail)
         self.addChild(self.tail_s1)
         # Segment 2 - Cone tip attached to segment 1
         tail_s2_size = [0.1, 0.1, 0.25]
