@@ -117,13 +117,48 @@ class Prey(Component, EnvironmentObject):
     def setDefaultPose(self):
         # Start with tail straight
         self.tail_s1.setDefaultAngle(0, self.tail_s1.vAxis)
+    
+    def rotateDirection(self, target_dir):
+        # Establish creature's local axis and basis for front facing directions
+        forward_v = Point([0, 0, 1])
+        target_dir.normalize()
+        dot_prod = forward_v.dot(target_dir)
+        q = Quaternion()
+        
+        # Edge cases
+        if dot_prod > 0.999:
+            self.clearQuaternion()
+            return        
+        elif dot_prod < -0.999:
+            # Flip and face backwards
+            angle = math.pi
+            # Calculate quarternion components (s, v0 to v2)
+            s = math.cos(angle / 2.0)
+            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
+            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
+            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
+            q.set(s, v0, v1, v2)
+        else:
+            # Standard cases
+            axis = target_dir.cross3d(forward_v).normalize()
+            angle = math.acos(dot_prod)
+            half_sin = math.sin(angle / 2.0)
+            half_cos = math.cos(angle / 2.0)
+            
+            q.set(half_cos, 
+                  (axis[0] * half_sin), 
+                  (axis[1] * half_sin), 
+                  (axis[2] * half_sin))
+            
+        self.setQuaternion(q)
 
     def animationUpdate(self):
         # Wiggle tail
         self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
 
         # Check limits and reverse direction
-        if self.tail_s1.vAngle in self.tail_s1.vRange:
+        if self.tail_s1.vAngle == self.tail_s1.vRange[0] or \
+           self.tail_s1.vAngle == self.tail_s1.vRange[1]:
             self.tail_wiggle_speed *= -1
 
         self.update()  # Apply transformations
@@ -294,7 +329,7 @@ class Predator(Component, EnvironmentObject):
             q.set(s, v0, v1, v2)
         else:
             # Standard cases
-            axis = forward_v.cross3d(target_dir).normalize()
+            axis = target_dir.cross3d(forward_v).normalize()
             angle = math.acos(dot_prod)
             half_sin = math.sin(angle / 2.0)
             half_cos = math.cos(angle / 2.0)
