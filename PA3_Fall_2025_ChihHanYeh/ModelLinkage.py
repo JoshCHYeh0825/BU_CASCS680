@@ -247,7 +247,10 @@ class Predator(Component, EnvironmentObject):
         # Animation & Collision Setup
         self.tail_wiggle_speed = 0.5
         self.pincer_snap_speed = 0.5
-        self.translation_speed = Point([random.uniform(-0.015, 0.015) for _ in range(3)])
+        self.direction = np.random.random(3)
+        self.direction = self.direction / np.linalg.norm(self.direction)
+        self.step_size = 0.01
+        
         self.bound_center = Point((0, 0, 0))
         self.bound_radius = body_size[2] * 1.1  # Based on body length
 
@@ -281,52 +284,25 @@ class Predator(Component, EnvironmentObject):
         self.update()
         
     def stepForward(self, components, tank_dimensions, vivarium):
-        # TODO 3: Interact with the environment
+        
+        # Creature's current position
+        current_pos = self.position.coords
+        # Probe the next position
+        nextPos = current_pos + self.direction * self.step_size
 
-        # Calculate New Position
-        current_world_pos = Point(self.transformationMat[3, 0:3])
-        new_pos_world = current_world_pos + self.translation_speed
+        # Check for wall collisions and update direction if needed
+        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2.0) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2.0)):
+            self.direction[0] *= -1
+        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2.0) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2.0)):
+            self.direction[1] *= -1
+        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2.0) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2.0)):
+            self.direction[2] *= -1
 
-        # Tank Wall Collision
-        for i in range(3):
-            if abs(new_pos_world[i]) + self.bound_radius > tank_dimensions[i]:
-                self.translation_speed[i] *= -1
-                new_pos_world[i] = np.sign(new_pos_world[i]) * (tank_dimensions[i] - self.bound_radius)  # Clamp position
-            # elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]: # Check negative wall too
-            #     self.translation_speed[i] *= -1
-            #     new_pos_world[i] = -tank_dimensions[i] + self.bound_radius
+        # Calculate the final position using the (potentially) updated direction
+        finalPos = self.position.coords + self.direction * self.step_size
 
-        # Creature Interaction
-        for other_obj in components:
-            if other_obj is self or not isinstance(other_obj, EnvironmentObject):
-                continue
-
-            other_world_pos = Point(other_obj.transformationMat[3, 0:3])
-            dist_vec = new_pos_world - other_world_pos
-            dist_sq = dist_vec.dot(dist_vec)
-            radii_sum = self.bound_radius + other_obj.bound_radius
-
-            # Collision Check
-            if dist_sq < radii_sum * radii_sum:
-                if other_obj.species_id == 2:  # Collided with Prey
-                    pass  # Predator doesn't need to do anything special here
-                elif other_obj.species_id == self.species_id:  # Collided with non-preys
-                    if dist_sq > 1e-6:
-                        collision_normal = dist_vec.normalize()
-                        self.translation_speed = self.translation_speed.reflect(collision_normal)
-                        separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
-                        new_pos_world = new_pos_world + collision_normal * separation
-
-            # Potential Function
-            elif other_obj.species_id == 2:  # If it's prey nearby
-                chase_radius_sq = (self.bound_radius * 8) ** 2  # Chase if prey is within 8 radii
-                if dist_sq < chase_radius_sq:
-                    # Add a force pulling towards the prey
-                    chase_force = -dist_vec.normalize() * 0.008  # Adjust strength as needed
-                    self.translation_speed = (self.translation_speed + chase_force).normalize() * self.translation_speed.norm()
-
-        # Update Position
-        self.position = new_pos_world
+        # Update the creature's position
+        self.position = Point(finalPos)
             
 class Linkage(Component, EnvironmentObject):
     """
@@ -407,6 +383,17 @@ class Linkage(Component, EnvironmentObject):
         #           2. Collision between the same species: They should bounce apart from each other. You can use a
         #           reflection vector about a plane to decide the after-collision direction.
         #       3. You are welcome to use bounding spheres for collision detection.
+        nextPos = self.currentPos.coords + self.direction * self.step_size
+        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
+            self.direction[0] *= -1
+        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
+            self.direction[1] *= -1
+        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
+            self.direction[2] *= -1
+            
+        finalPos = self.currentPos.coords + self.direction * self.step_size
+        
+        self.setCurrentPosition(Point(finalPos))
         
 
 class ModelArm(Component):
