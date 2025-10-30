@@ -205,7 +205,7 @@ class Predator(Component, EnvironmentObject):
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [0.1, 0.1, 0.5]
         self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] - (tail_s1_size[2] / 2.0)))), shaderProg, tail_s1_size, color_tail)
-        self.addChild(self.tail_s1)
+        self.body.addChild(self.tail_s1)
         # Segment 2 - Cone tip attached to segment 1
         tail_s2_size = [0.1, 0.1, 0.25]
         tail_s2_attach_z = -(tail_s1_size[2] / 2.0) - (tail_s2_size[2] / 2.0)
