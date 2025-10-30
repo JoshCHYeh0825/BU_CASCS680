@@ -285,7 +285,7 @@ class Predator(Component, EnvironmentObject):
 
         # Animation & Collision Setup
         self.tail_wiggle_speed = 0.5
-        self.pincer_snap_speed = 0.5
+        self.pincer_snap_speed = 0.5        
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
