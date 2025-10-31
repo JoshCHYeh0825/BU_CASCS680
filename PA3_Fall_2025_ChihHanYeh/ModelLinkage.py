@@ -123,13 +123,15 @@ class Prey(Component, EnvironmentObject):
         forward_v = Point([0, 0, 1])
         target_dir.normalize()
         dot_prod = forward_v.dot(target_dir)
-        q = Quaternion()
-        
+         
         # Edge cases
         if dot_prod > 0.999:
-            self.clearQuaternion()
-            return        
-        elif dot_prod < -0.999:
+            self.setPostRotation(np.identity(4))
+            return
+        
+        q = Quaternion()
+        
+        if dot_prod < -0.999:
             # Flip and face backwards
             angle = math.pi
             # Calculate quarternion components (s, v0 to v2)
@@ -150,7 +152,7 @@ class Prey(Component, EnvironmentObject):
                   (axis[1] * half_sin), 
                   (axis[2] * half_sin))
             
-        self.setQuaternion(q)
+        self.setPostRotation(q.toMatrix())
 
     def animationUpdate(self):
         # Wiggle tail
