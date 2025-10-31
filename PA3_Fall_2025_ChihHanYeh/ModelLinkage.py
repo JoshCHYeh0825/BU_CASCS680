@@ -10,7 +10,6 @@ Modified by Daniel Scrivener 08/2022
 import random
 import numpy as np
 import math
-import time
 from Component import Component
 from Quaternion import Quaternion
 from Shapes import Cube, Cone, Cylinder, Sphere
@@ -197,11 +196,9 @@ class Prey(Component, EnvironmentObject):
         self.addChild(self.body)
 
         # Tail
-        # Segment 1 - Moving cylinder Attached to the back of the body
+        # Segment 1 - Moving cylinder Attached to the back of the body        
         tail_s1_size = [0.08, 0.08, 0.4]
         self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] * 0.9))), shaderProg, tail_s1_size, color_tail)
-        tail_rot_Mat = self.glUtility.rotate(180, self.vAxis, False)
-        self.tail_s1.setPreRotation(tail_rot_Mat)
         self.body.addChild(self.tail_s1)
 
         # Segment 2 - Cone tip attached to segment 1
@@ -278,9 +275,11 @@ class Prey(Component, EnvironmentObject):
         self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
 
         # Check limits and reverse direction
-        if self.tail_s1.vAngle == self.tail_s1.vRange[0] or \
-           self.tail_s1.vAngle == self.tail_s1.vRange[1]:
+        if self.tail_s1.vAngle <= self.tail_s1.vRange[0] or \
+           self.tail_s1.vAngle >= self.tail_s1.vRange[1]:
             self.tail_wiggle_speed *= -1
+        # Clamp
+            self.tail_s1.vAngle = max(min(self.tail_s1.vAngle, self.tail_s1.vRange[1]), self.tail_s1.vRange[0])
 
         self.update()  # Apply transformations
     
@@ -365,19 +364,21 @@ class Predator(Component, EnvironmentObject):
         # Tail
         # Segment 1 - Moving cylinder Attached to the back of the body
         tail_s1_size = [i * sizing_scale for i in [0.1, 0.1, 0.25]]
-        self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] * 0.9))), shaderProg, tail_s1_size, color_tail)
-        tail_rot_Mat = self.glUtility.rotate(180, self.vAxis, False)
-        self.tail_s1.setPreRotation(tail_rot_Mat)
-        self.body.addChild(self.tail_s1)
+        tail_s1_length = tail_s1_size[2]
+
+        base_attach_z = -body_size[2] * 0.9 - tail_s1_length / 2.0
+        self.tail_s1 = Cylinder(Point((0, 0, base_attach_z)), shaderProg, tail_s1_size, color_tail)
         
+        self.body.addChild(self.tail_s1)
+    
         # Segment 2 (Middle) - Attached to s1, WIGGLES
         tail_s2_size = [x * sizing_scale for x in [0.1, 0.1, 0.3]]
-        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
+        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_length / 2)), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
         
         # Segment 3 - Cone tip attached to segment 1
         tail_s3_size = [i * sizing_scale for i in [0.1, 0.1, 0.2]]
-        self.tail_s3 = Cone(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s3_size, color_tail)
+        self.tail_s3 = Cone(Point((0, 0, tail_s2_size[2] / 2)), shaderProg, tail_s3_size, color_tail)
         self.tail_s2.addChild(self.tail_s3)
 
         # Pincer
@@ -427,7 +428,7 @@ class Predator(Component, EnvironmentObject):
         self.setDefaultPose()
 
     def setJointLimits(self):
-        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -45, 45)  # Wiggle L/R
+        self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -45, 45)  # Wiggle L/R
         self.pincer_r1.setRotateExtent(self.pincer_r1.vAxis, -10, 30)  # Open/Close R
         self.pincer_l1.setRotateExtent(self.pincer_l1.vAxis, -30, 10)  # Open/Close L (mirrored)
 
@@ -472,10 +473,11 @@ class Predator(Component, EnvironmentObject):
 
     def animationUpdate(self):
         # Wiggle tail
-        self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
-        if self.tail_s1.vAngle == self.tail_s1.vRange[0] or \
-           self.tail_s1.vAngle == self.tail_s1.vRange[1]:
+        self.tail_s2.rotate(self.tail_wiggle_speed, self.tail_s2.vAxis)
+        if self.tail_s2.vAngle <= self.tail_s2.vRange[0] or self.tail_s2.vAngle >= self.tail_s2.vRange[1]:
             self.tail_wiggle_speed *= -1
+        # Clamp
+            self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
 
         # Snap pincers
         self.pincer_r1.rotate(self.pincer_snap_speed, self.pincer_r1.vAxis)
