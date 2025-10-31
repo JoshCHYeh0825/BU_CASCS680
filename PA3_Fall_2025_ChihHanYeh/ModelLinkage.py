@@ -380,7 +380,7 @@ class Predator(Component, EnvironmentObject):
 
         # Segment 2 (Middle) - Attached to s1, needs similar pre-rotation to align orientation
         # Position segment 2 at the end of segment 1 (half-length offset)
-        self.tail_s2 = Cylinder(Point((0, 0, 1.5*tail_s1_length)), shaderProg, tail_s2_size, color_tail)
+        self.tail_s2 = Cylinder(Point((0, 0, 2*tail_s1_length)), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Segment 3 (Tip) - Cone attached to the end of segment 2
