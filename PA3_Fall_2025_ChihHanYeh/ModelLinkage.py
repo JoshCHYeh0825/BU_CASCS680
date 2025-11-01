@@ -435,7 +435,7 @@ class Predator(Component, EnvironmentObject):
         self.setDefaultPose()
 
     def setJointLimits(self):
-        self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -45, 45)  # Wiggle L/R
+        self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -30, 30)  # Wiggle L/R
         self.pincer_r1.setRotateExtent(self.pincer_r1.vAxis, -10, 30)  # Open/Close R
         self.pincer_l1.setRotateExtent(self.pincer_l1.vAxis, -30, 10)  # Open/Close L (mirrored)
 
@@ -480,8 +480,8 @@ class Predator(Component, EnvironmentObject):
 
     def animationUpdate(self):
         # Tail animation
+        # Rotation on segment 2
         self.tail_s2.rotate(self.tail_wiggle_speed, self.tail_s2.vAxis)
-
         if self.tail_s2.vAngle <= self.tail_s2.vRange[0] or self.tail_s2.vAngle >= self.tail_s2.vRange[1]:
             self.tail_wiggle_speed *= -1
             self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
