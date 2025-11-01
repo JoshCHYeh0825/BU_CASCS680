@@ -196,18 +196,20 @@ class Prey(Component, EnvironmentObject):
         self.addChild(self.body)
 
         # Tail
-        # Segment 1 - Moving cylinder Attached to the back of the body        
+        # Segment 1 - Cylinder attached to the back of the body        
         tail_s1_size = [0.08, 0.08, 0.4]
         self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] * 0.9))), shaderProg, tail_s1_size, color_tail)
         self.body.addChild(self.tail_s1)
+        
+        # Segment 2 - Moving cylinder atttached to segment 1
 
-        # Segment 2 - Cone tip attached to segment 1
-        tail_s2_size = [0.08, 0.08, 0.2]  # Cone: radius, radius, length
-        self.tail_s2 = Cone(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s2_size, color_tail)
+        # Segment 3 - Cone tip attached to segment 1
+        tail_s3_size = [0.08, 0.08, 0.3]  # Cone: radius, radius, length
+        self.tail_s2 = Cone(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Components Storage
-        self.tail_segments = [self.tail_s1, self.tail_s2]
+        self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3]
         self.components = [self.body, self.tail_s1, self.tail_s2]
         self.componentList = self.components
         self.componentDict = {
@@ -217,10 +219,10 @@ class Prey(Component, EnvironmentObject):
         }
 
         # Animation & Collision
-        self.tail_wiggle_speed = 0.5  # Degrees per frame for side-to-side motion
-        self.translation_speed = Point([random.uniform(-0.02, 0.02) for _ in range(3)])
-        self.bound_center = Point((0, 0, 0))
-        self.bound_radius = body_size[2]  # Bounding sphere based on body length
+        self.tail_wiggle_speed = 0.5
+        self.direction = np.random.random(3)
+        self.direction = self.direction / np.linalg.norm(self.direction)
+        self.step_size = 0.01
 
         # Set Pose and Limits
         self.setJointLimits()
