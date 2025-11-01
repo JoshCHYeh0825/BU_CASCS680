@@ -58,14 +58,14 @@ class Vivarium(Component):
         self.creatures.append(Hunter)
             
         # Adding the prey, setting up initial position then instantiating 2 with a for loop
-        """
+        
         for _ in range(2):
             prey_pos = Point([random.uniform(-self.tank_dimensions[i] * 0.8, self.tank_dimensions[i] * 0.8) for i in range(3)])
             Hunted = Prey(parent, prey_pos, shaderProg)  # Use parent from Sketch
             self.addNewObjInTank(Hunted)
             self.creatures.append(Hunted)
             
-        """
+        
         
     def animationUpdate(self):
         """

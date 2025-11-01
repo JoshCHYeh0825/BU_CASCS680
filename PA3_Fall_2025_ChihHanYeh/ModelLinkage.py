@@ -200,10 +200,15 @@ class Prey(Component, EnvironmentObject):
         # Segment 1 - Cylinder attached to the back of the body        
         tail_s1_size = [i * sizing_scale for i in [0.08, 0.08, 0.4]]
         self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] * 0.9))), shaderProg, tail_s1_size, color_tail)
+        
+        # Compose pre-rotation for segment 1
+        R1 = self.glUtility.rotate(180, self.vAxis, False)
+        self.tail_s1.setPreRotation(R1)
+        
         self.body.addChild(self.tail_s1)
         
         # Segment 2 - Moving cylinder atttached to segment 1
-        tail_s1_size = [i * sizing_scale for i in [0.08, 0.08, 0.3]]
+        tail_s2_size = [i * sizing_scale for i in [0.08, 0.08, 0.3]]
         self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
         
@@ -214,7 +219,7 @@ class Prey(Component, EnvironmentObject):
 
         # Components Storage
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3]
-        self.components = [self.body, self.tail_s1, self.tail_s2]
+        self.components = [self.body, self.tail_s1, self.tail_s2, self.tail_s3]
         self.componentList = self.components
         self.componentDict = {
             "body": self.body,
@@ -228,33 +233,36 @@ class Prey(Component, EnvironmentObject):
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
+        
+        self.bound_center = Point((0, 0, 0))
+        self.bound_radius = body_size[2] * 1.1
 
         # Set Pose and Limits
         self.setJointLimits()
         self.setDefaultPose()
 
+
     def setJointLimits(self):
         # Tail segment 1 wiggles left/right around the vertical (Y/v) axis
-        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -30, 30)
+        self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -30, 30)
 
     def setDefaultPose(self):
         # Start with tail straight
-        self.tail_s1.setDefaultAngle(0, self.tail_s1.vAxis)
+        self.tail_s2.setDefaultAngle(0, self.tail_s2.vAxis)
     
     def rotateDirection(self, target_dir):
         # Establish creature's local axis and basis for front facing directions
         forward_v = Point([0, 0, 1])
         target_dir.normalize()
         dot_prod = forward_v.dot(target_dir)
-         
+        q = Quaternion()
+
         # Edge cases
         if dot_prod > 0.999:
-            self.setPostRotation(np.identity(4))
+            self.clearQuaternion()
             return
-        
-        q = Quaternion()
-        
-        if dot_prod < -0.999:
+
+        elif dot_prod < -0.999:
             # Flip and face backwards
             angle = math.pi
             # Calculate quarternion components (s, v0 to v2)
@@ -263,19 +271,20 @@ class Prey(Component, EnvironmentObject):
             v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
             v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
             q.set(s, v0, v1, v2)
+
         else:
             # Standard cases
             axis = target_dir.cross3d(forward_v).normalize()
             angle = math.acos(dot_prod)
             half_sin = math.sin(angle / 2.0)
             half_cos = math.cos(angle / 2.0)
-            
+
             q.set(half_cos, 
                   (axis[0] * half_sin), 
                   (axis[1] * half_sin), 
                   (axis[2] * half_sin))
-            
-        self.setPostRotation(q.toMatrix())
+
+        self.setQuaternion(q)
 
     def animationUpdate(self):
         # Tail animation
@@ -286,7 +295,7 @@ class Prey(Component, EnvironmentObject):
             self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
 
         self.update()  # Apply transformations
-    
+
     def stepForward(self, components, tank_dimensions, vivarium): 
         # Creature's current position
         current_pos = self.currentPos.coords
@@ -401,7 +410,7 @@ class Predator(Component, EnvironmentObject):
         self.step_size = 0.01
 
         self.bound_center = Point((0, 0, 0))
-        self.bound_radius = body_size[2] * 1.1  # Based on body length
+        self.bound_radius = body_size[2] * 1.1
 
         # Set Pose and Limits
         self.setJointLimits()
