@@ -15,6 +15,37 @@ from Component import Component
 from ModelTank import Tank
 from EnvironmentObject import EnvironmentObject
 from ModelLinkage import Prey, Predator
+from Shapes import Sphere
+import ColorType as Ct
+
+
+class Food(Component, EnvironmentObject):
+    """
+    Food object that descends slowly into the bottom of the vivarium
+    Can be eaten
+    """
+    def __init__(self, parent, position, shaderProg):
+        super(Food, self).__init__(position)
+        self.contextParent = parent
+        self.velocity = np.array([0.0, -0.002, 0.0])  # slow fall
+        self.eaten = False
+        self.bound_radius = 0.05
+
+        # Sizing and color
+        self.color = Ct.ColorType(1.0, 0.7, 0.1)  # orange-yellow
+        self.sphere = Sphere(Point((0, 0, 0)), shaderProg, [0.05, 0.05, 0.05], self.color)
+        self.addChild(self.sphere)
+
+    def stepForward(self, tank_dimensions):
+        # Drop motion
+        nextPos = self.currentPos.coords + self.velocity
+
+        bottom_y = -(tank_dimensions[1] / 2) + self.bound_radius
+        if nextPos[1] < bottom_y:
+            nextPos[1] = bottom_y
+            self.velocity = np.array([0.0, 0.0, 0.0])
+
+        self.setCurrentPosition(Point(nextPos))
 
 
 class Vivarium(Component):
@@ -49,14 +80,15 @@ class Vivarium(Component):
         # Store all components in one list, for us to access them later
         self.components = [tank]
         self.creatures = []  # Separate list for prey and predator
-        
+        self.food_obj = []  # List for food objects
+
         # Adding the creatures: 2 preys, 1 predator
         # Adding the predator, setting up initial position then instantiating
         predator_start = Point([random.uniform(-self.tank_dimensions[i] * 0.45, self.tank_dimensions[i] * 0.45) for i in range(3)])
         Hunter = Predator(parent, predator_start, shaderProg)  # Use parent from Sketch
         self.addNewObjInTank(Hunter)
         self.creatures.append(Hunter)
-            
+
         # Adding the prey, setting up initial position then instantiating 2 with a for loop
         for _ in range(2):
             prey_pos = Point([random.uniform(-self.tank_dimensions[i] * 0.45, self.tank_dimensions[i] * 0.45) for i in range(3)])
@@ -64,16 +96,40 @@ class Vivarium(Component):
             self.addNewObjInTank(Hunted)
             self.creatures.append(Hunted)
 
+    def spawnFood(self):
+        # Spawn a new food particle randomly near the top of the tank
+
+        # Near top of y but random x/z
+        x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)
+        y = self.tank_dimensions[1] * 0.45
+        z = random.uniform(-self.tank_dimensions[2] * 0.4, self.tank_dimensions[2] * 0.4)
+        pos = Point((x, y, z))
+
+        food = Food(self.parent, pos, self.shaderProg)
+
+        self.addNewObjInTank(food)
+        self.food_obj.append(food)
 
     def animationUpdate(self):
         """
         Update all creatures in vivarium
         """
-            
+
         for creature in self.creatures[::-1]:
             creature.stepForward(self.creatures, self.tank_dimensions, self)
             creature.animationUpdate()  # Pass self.creatures
-        
+
+        for food in self.food_obj[::-1]:
+            food.stepForward(self.tank_dimensions)
+            # Check if any creature eats the food
+            for creature in self.creatures:
+                dist = np.linalg.norm(np.array(creature.currentPos.coords) - np.array(food.currentPos.coords))
+                if dist < (creature.bound_radius + food.bound_radius):
+                    # Food eaten
+                    self.delObjInTank(food)
+                    self.food_obj.remove(food)
+                    break
+
         self.update()
 
     def delObjInTank(self, obj):
@@ -89,4 +145,3 @@ class Vivarium(Component):
         if isinstance(newComponent, EnvironmentObject):
             # add environment components list reference to this new object's
             newComponent.env_obj_list = self.components
-

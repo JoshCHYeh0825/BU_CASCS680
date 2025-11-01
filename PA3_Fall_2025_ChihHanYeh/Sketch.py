@@ -384,6 +384,12 @@ class Sketch(CanvasBase):
             # reset viewing angle
             self.viewing_quaternion = Quaternion()
             self.update()
+            
+        # Dropping food after pressing 'f' key
+        if chr(keycode) in "fF":
+            vivarium = self.topLevelComponent.children[0]  # Vivarium is first child
+            vivarium.spawnFood()
+            print("Food spawned in tank!")
 
 
 if __name__ == "__main__":
