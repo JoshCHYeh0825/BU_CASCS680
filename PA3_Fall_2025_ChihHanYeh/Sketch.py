@@ -378,13 +378,13 @@ class Sketch(CanvasBase):
             # reset viewing angle
             self.viewing_quaternion = Quaternion()
             self.update()
-        
+
         # A test scene with only one (1) predator and one (1) prey
         if chr(keycode) in "tT":
             # reset viewing angle
             self.viewing_quaternion = Quaternion()
             self.update()
-            
+
         # Dropping food after pressing 'f' key
         if chr(keycode) in "fF":
             self.vivarium.spawnFood()
