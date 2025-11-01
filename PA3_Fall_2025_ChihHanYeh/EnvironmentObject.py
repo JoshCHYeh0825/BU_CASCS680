@@ -97,3 +97,37 @@ class EnvironmentObject:
                   (axis[2] * half_sin))
 
         self.setQuaternion(q)
+
+    def distance_to(self, other):
+        # Compute Euclidean distance to another EnvironmentObject
+        return np.linalg.norm(self.currentPos.coords - other.currentPos.coords)
+
+    def detect_collision(self, other):
+        # Detect bounding-sphere collision
+        if self is other:
+            return False
+        dist = self.distance_to(other)
+        return dist < (self.bound_radius + other.bound_radius)
+
+    def reflect_direction(self, normal):
+        # Reflect movement direction defined by normal
+        n = normal / np.linalg.norm(normal)
+        self.direction = self.direction - 2 * np.dot(self.direction, n) * n
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction))
+
+    def apply_attraction(self, target, strength=0.01):
+        # Move slightly towards a target object.
+        delta = target.currentPos.coords - self.currentPos.coords
+        delta /= np.linalg.norm(delta)
+        self.direction += strength * delta
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction))
+
+    def apply_repulsion(self, target, strength=0.02):
+        # Move slightly away from a target object.
+        delta = self.currentPos.coords - target.currentPos.coords
+        delta /= np.linalg.norm(delta)
+        self.direction += strength * delta
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction))

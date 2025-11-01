@@ -234,6 +234,10 @@ class Prey(Component, EnvironmentObject):
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
         
+        # Set Orientation
+        self.rotateDirection(Point(self.direction))
+
+        # Properties for wall collisions
         self.bound_center = Point((0, 0, 0))
         self.bound_radius = body_size[2] * 1.1
 
@@ -383,7 +387,11 @@ class Predator(Component, EnvironmentObject):
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
+        
+        # Set Orientation
+        self.rotateDirection(Point(self.direction))
 
+        # Properties for wall collisions
         self.bound_center = Point((0, 0, 0))
         self.bound_radius = body_size[2] * 1.1
 
