@@ -387,8 +387,7 @@ class Sketch(CanvasBase):
             
         # Dropping food after pressing 'f' key
         if chr(keycode) in "fF":
-            vivarium = self.topLevelComponent.children[0]  # Vivarium is first child
-            vivarium.spawnFood()
+            self.vivarium.spawnFood()
             print("Food spawned in tank!")
 
 
