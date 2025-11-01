@@ -63,4 +63,37 @@ class EnvironmentObject:
         :param v1: targed facing direction
         :type v1: Point
         """
-        self.setPostRotation(np.identity(4))
+        # Establish creature's local axis and basis for front facing directions
+        forward_v = Point([0, 0, 1])
+        v1.normalize()
+        dot_prod = forward_v.dot(v1)
+        q = Quaternion()
+
+        # Edge cases
+        if dot_prod > 0.999:
+            self.clearQuaternion()
+            return
+
+        elif dot_prod < -0.999:
+            # Flip and face backwards
+            angle = math.pi
+            # Calculate quarternion components (s, v0 to v2)
+            s = math.cos(angle / 2.0)
+            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
+            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
+            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
+            q.set(s, v0, v1, v2)
+
+        else:
+            # Standard cases
+            axis = v1.cross3d(forward_v).normalize()
+            angle = math.acos(dot_prod)
+            half_sin = math.sin(angle / 2.0)
+            half_cos = math.cos(angle / 2.0)
+
+            q.set(half_cos, 
+                  (axis[0] * half_sin), 
+                  (axis[1] * half_sin), 
+                  (axis[2] * half_sin))
+
+        self.setQuaternion(q)

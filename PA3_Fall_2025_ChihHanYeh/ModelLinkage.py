@@ -241,7 +241,6 @@ class Prey(Component, EnvironmentObject):
         self.setJointLimits()
         self.setDefaultPose()
 
-
     def setJointLimits(self):
         # Tail segment 1 wiggles left/right around the vertical (Y/v) axis
         self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -30, 30)
@@ -249,42 +248,6 @@ class Prey(Component, EnvironmentObject):
     def setDefaultPose(self):
         # Start with tail straight
         self.tail_s2.setDefaultAngle(0, self.tail_s2.vAxis)
-    
-    def rotateDirection(self, target_dir):
-        # Establish creature's local axis and basis for front facing directions
-        forward_v = Point([0, 0, 1])
-        target_dir.normalize()
-        dot_prod = forward_v.dot(target_dir)
-        q = Quaternion()
-
-        # Edge cases
-        if dot_prod > 0.999:
-            self.clearQuaternion()
-            return
-
-        elif dot_prod < -0.999:
-            # Flip and face backwards
-            angle = math.pi
-            # Calculate quarternion components (s, v0 to v2)
-            s = math.cos(angle / 2.0)
-            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
-            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
-            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
-            q.set(s, v0, v1, v2)
-
-        else:
-            # Standard cases
-            axis = target_dir.cross3d(forward_v).normalize()
-            angle = math.acos(dot_prod)
-            half_sin = math.sin(angle / 2.0)
-            half_cos = math.cos(angle / 2.0)
-
-            q.set(half_cos, 
-                  (axis[0] * half_sin), 
-                  (axis[1] * half_sin), 
-                  (axis[2] * half_sin))
-
-        self.setQuaternion(q)
 
     def animationUpdate(self):
         # Tail animation
@@ -437,40 +400,6 @@ class Predator(Component, EnvironmentObject):
         self.tail_s1.setDefaultAngle(0, self.tail_s1.vAxis)
         self.pincer_r1.setDefaultAngle(15, self.pincer_r1.vAxis)  # Pincers start slightly open
         self.pincer_l1.setDefaultAngle(-15, self.pincer_l1.vAxis)
-
-    def rotateDirection(self, target_dir):
-        # Establish creature's local axis and basis for front facing directions
-        forward_v = Point([0, 0, 1])
-        target_dir.normalize()
-        dot_prod = forward_v.dot(target_dir)
-        q = Quaternion()
-
-        # Edge cases
-        if dot_prod > 0.999:
-            self.clearQuaternion()
-            return        
-        elif dot_prod < -0.999:
-            # Flip and face backwards
-            angle = math.pi
-            # Calculate quarternion components (s, v0 to v2)
-            s = math.cos(angle / 2.0)
-            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
-            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
-            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
-            q.set(s, v0, v1, v2)
-        else:
-            # Standard cases
-            axis = target_dir.cross3d(forward_v).normalize()
-            angle = math.acos(dot_prod)
-            half_sin = math.sin(angle / 2.0)
-            half_cos = math.cos(angle / 2.0)
-
-            q.set(half_cos, 
-                  (axis[0] * half_sin), 
-                  (axis[1] * half_sin), 
-                  (axis[2] * half_sin))
-
-        self.setQuaternion(q)
 
     def animationUpdate(self):
         # Tail animation
