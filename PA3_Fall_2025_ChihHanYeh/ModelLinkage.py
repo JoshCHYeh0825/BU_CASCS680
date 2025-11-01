@@ -297,25 +297,37 @@ class Prey(Component, EnvironmentObject):
         self.update()  # Apply transformations
 
     def stepForward(self, components, tank_dimensions, vivarium): 
-        # Creature's current position
-        current_pos = self.currentPos.coords
         # Probe the next position
-        nextPos = current_pos + self.direction * self.step_size
+        nextPos = self.currentPos.coords + self.direction * self.step_size
+        # Track whether a bounce happened
+        bounce = False
 
-        # Check for wall collisions and update direction if needed
-        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2.0) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2.0)):
+        # X-axis bouce
+        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
             self.direction[0] *= -1
-        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2.0) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2.0)):
-            self.direction[1] *= -1
-        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2.0) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2.0)):
-            self.direction[2] *= -1
+            bounce = True
+            # Clamp inside wall
+            nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
 
-        # Calculate the final position
+        # Y-axis bounce
+        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
+            self.direction[1] *= -1
+            bounce = True
+            nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+
+        # Z-axis bounce
+        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
+            self.direction[2] *= -1
+            bounce = True
+            nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
+
+        # Compute final position
         finalPos = self.currentPos.coords + self.direction * self.step_size
-        # Update the creature's position
-        self.setCurrentPosition(Point(finalPos)) 
-        # Update creature's orientation        
-        self.rotateDirection(Point(self.direction))
+        self.setCurrentPosition(Point(finalPos))
+
+        # Only reorient if a bounce occurred — prevents rapid flipping along wall
+        if bounce:
+            self.rotateDirection(Point(self.direction))
 
 
 class Predator(Component, EnvironmentObject):
@@ -481,22 +493,34 @@ class Predator(Component, EnvironmentObject):
         self.update()
 
     def stepForward(self, components, tank_dimensions, vivarium):
-        # Creature's current position
-        current_pos = self.currentPos.coords
         # Probe the next position
-        nextPos = current_pos + self.direction * self.step_size
+        nextPos = self.currentPos.coords + self.direction * self.step_size
+        # Track whether a bounce happened
+        bounce = False
 
-        # Check for wall collisions and update direction if needed
-        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2.0) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2.0)):
+        # X-axis bouce
+        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
             self.direction[0] *= -1
-        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2.0) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2.0)):
-            self.direction[1] *= -1
-        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2.0) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2.0)):
-            self.direction[2] *= -1
+            bounce = True
+            # Clamp inside wall
+            nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
 
-        # Calculate the final position
+        # Y-axis bounce
+        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
+            self.direction[1] *= -1
+            bounce = True
+            nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+
+        # Z-axis bounce
+        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
+            self.direction[2] *= -1
+            bounce = True
+            nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
+
+        # Compute final position
         finalPos = self.currentPos.coords + self.direction * self.step_size
-        # Update the creature's position
-        self.setCurrentPosition(Point(finalPos)) 
-        # Update creature's orientation        
-        self.rotateDirection(Point(self.direction))
+        self.setCurrentPosition(Point(finalPos))
+
+        # Only reorient if a bounce occurred — prevents rapid flipping along wall
+        if bounce:
+            self.rotateDirection(Point(self.direction))
