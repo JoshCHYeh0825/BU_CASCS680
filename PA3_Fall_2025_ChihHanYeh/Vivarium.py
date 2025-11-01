@@ -65,7 +65,6 @@ class Vivarium(Component):
             self.creatures.append(Hunted)
 
 
-
     def animationUpdate(self):
         """
         Update all creatures in vivarium

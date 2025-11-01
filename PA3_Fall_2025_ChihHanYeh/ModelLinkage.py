@@ -263,7 +263,29 @@ class Prey(Component, EnvironmentObject):
 
         self.update()  # Apply transformations
 
-    def stepForward(self, components, tank_dimensions, vivarium): 
+    def stepForward(self, components, tank_dimensions, vivarium):
+        # Creature interactions
+        for obj in vivarium.creatures:
+            if obj is self:
+                continue
+
+            dist = self.distance_to(obj)
+
+            # Chasing prey
+            if obj.species_id == 1 and dist < 3:
+                self.apply_repulsion(obj, strength=0.02)
+
+            # Bounce away from non prey/other predator upon collision
+            elif obj.species_id == 2 and self.detect_collision(obj):
+                normal = self.currentPos.coords - obj.currentPos.coords
+                self.reflect_direction(normal)
+
+            # Eaten when colliding with predator
+            if obj.species_id == 1 and self.detect_collision(obj):
+                vivarium.delObjInTank(self)
+                vivarium.creatures.remove(self)
+                return
+
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
         # Track whether a bounce happened
@@ -430,6 +452,22 @@ class Predator(Component, EnvironmentObject):
         self.update()
 
     def stepForward(self, components, tank_dimensions, vivarium):
+        # Creature interactions
+        for obj in vivarium.creatures:
+            if obj is self:
+                continue
+
+            dist = self.distance_to(obj)
+
+            # Chasing prey
+            if obj.species_id == 2 and dist < 4.5:
+                self.apply_attraction(obj, strength=0.01)
+
+            # Bounce away from non prey/other predator upon collision
+            elif obj.species_id == 1 and self.detect_collision(obj):
+                normal = self.currentPos.coords - obj.currentPos.coords
+                self.reflect_direction(normal)
+
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
         # Track whether a bounce happened
