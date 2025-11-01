@@ -186,8 +186,9 @@ class Prey(Component, EnvironmentObject):
         color_tail = Ct.ColorType(0.6, 0.5, 0.3)  # A slightly darker shade
         
         # Setting shapes for the creature
+        sizing_scale = 0.5
         # Main body -- Parent
-        body_size = [0.4, 0.4, 0.6]  # Egg-shaped
+        body_size = [i * sizing_scale for i in [0.4, 0.4, 0.6]]  # Egg-shaped
         super().__init__(position)
         self.contextParent = parent
         
@@ -197,25 +198,29 @@ class Prey(Component, EnvironmentObject):
 
         # Tail
         # Segment 1 - Cylinder attached to the back of the body        
-        tail_s1_size = [0.08, 0.08, 0.4]
+        tail_s1_size = [i * sizing_scale for i in [0.08, 0.08, 0.4]]
         self.tail_s1 = Cylinder(Point((0, 0, (-body_size[2] * 0.9))), shaderProg, tail_s1_size, color_tail)
         self.body.addChild(self.tail_s1)
         
         # Segment 2 - Moving cylinder atttached to segment 1
-
-        # Segment 3 - Cone tip attached to segment 1
-        tail_s3_size = [0.08, 0.08, 0.3]  # Cone: radius, radius, length
-        self.tail_s2 = Cone(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s2_size, color_tail)
+        tail_s1_size = [i * sizing_scale for i in [0.08, 0.08, 0.3]]
+        self.tail_s2 = Cylinder(Point((0, 0, tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
+        
+        # Segment 3 - Cone tip attached to segment 1
+        tail_s3_size = [i * sizing_scale for i in [0.08, 0.08, 0.3]]
+        self.tail_s3 = Cone(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s3_size, color_tail)
+        self.tail_s2.addChild(self.tail_s3)
 
         # Components Storage
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3]
         self.components = [self.body, self.tail_s1, self.tail_s2]
         self.componentList = self.components
         self.componentDict = {
-            "body": self.body, 
+            "body": self.body,
             "tail_s1": self.tail_s1,
-            "tail_s2": self.tail_s2
+            "tail_s2": self.tail_s2,
+            "tail_s3": self.tail_s3
         }
 
         # Animation & Collision
@@ -230,7 +235,7 @@ class Prey(Component, EnvironmentObject):
 
     def setJointLimits(self):
         # Tail segment 1 wiggles left/right around the vertical (Y/v) axis
-        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -45, 45)
+        self.tail_s1.setRotateExtent(self.tail_s1.vAxis, -30, 30)
 
     def setDefaultPose(self):
         # Start with tail straight
@@ -273,69 +278,35 @@ class Prey(Component, EnvironmentObject):
         self.setPostRotation(q.toMatrix())
 
     def animationUpdate(self):
-        # Wiggle tail
-        self.tail_s1.rotate(self.tail_wiggle_speed, self.tail_s1.vAxis)
-
-        # Check limits and reverse direction
-        if self.tail_s1.vAngle <= self.tail_s1.vRange[0] or \
-           self.tail_s1.vAngle >= self.tail_s1.vRange[1]:
+        # Tail animation
+        # Rotation on segment 2
+        self.tail_s2.rotate(self.tail_wiggle_speed, self.tail_s2.vAxis)
+        if self.tail_s2.vAngle <= self.tail_s2.vRange[0] or self.tail_s2.vAngle >= self.tail_s2.vRange[1]:
             self.tail_wiggle_speed *= -1
-        # Clamp
-            self.tail_s1.vAngle = max(min(self.tail_s1.vAngle, self.tail_s1.vRange[1]), self.tail_s1.vRange[0])
+            self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
 
         self.update()  # Apply transformations
     
     def stepForward(self, components, tank_dimensions, vivarium): 
-        # TODO 3: Interact with the environment
-       
-        # Current World position (stored in components)
-        current_world_pos = Point(self.transformationMat[3, 0:3])
-        new_pos_world = current_world_pos + self.translation_speed
-        
-        # Tank Wall Collision 
-        for i in range(3):
-            # Check positive wall
-            if new_pos_world[i] + self.bound_radius > tank_dimensions[i]:
-                self.translation_speed[i] *= -1  # Reverse speed
-                new_pos_world[i] = tank_dimensions[i] - self.bound_radius  # Place against wall
-            # Check negative wall
-            elif new_pos_world[i] - self.bound_radius < -tank_dimensions[i]:
-                self.translation_speed[i] *= -1  # Reverse speed
-                new_pos_world[i] = -tank_dimensions[i] + self.bound_radius  # Place against wall
+        # Creature's current position
+        current_pos = self.currentPos.coords
+        # Probe the next position
+        nextPos = current_pos + self.direction * self.step_size
 
-        # Creature Interaction
-        for other_obj in components:
-            if other_obj is self or not isinstance(other_obj, EnvironmentObject):
-                continue  # Skip non-creatures
+        # Check for wall collisions and update direction if needed
+        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2.0) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2.0)):
+            self.direction[0] *= -1
+        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2.0) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2.0)):
+            self.direction[1] *= -1
+        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2.0) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2.0)):
+            self.direction[2] *= -1
 
-            other_world_pos = Point(other_obj.transformationMat[3, 0:3])
-            dist_vec = new_pos_world - other_world_pos
-            dist_sq = dist_vec.dot(dist_vec)
-            radii_sum = self.bound_radius + other_obj.bound_radius
-
-            # Collision Check
-            if dist_sq < radii_sum * radii_sum:  # Bounding spheres overlap
-                if other_obj.species_id == 1:  # Collided with a Predator
-                    self.eaten = True # Add an 'eaten' flag
-                elif other_obj.species_id == self.species_id: # Collided with another Prey
-                    if dist_sq > 1e-6:  # Avoid division by zero if perfectly overlapped
-                        collision_normal = dist_vec.normalize()
-                        self.translation_speed = self.translation_speed.reflect(collision_normal)
-                        # Move slightly apart to prevent sticking
-                        separation = (radii_sum - math.sqrt(dist_sq)) * 0.5
-                        new_pos_world = new_pos_world + collision_normal * separation
-
-            # Potential Function
-            elif other_obj.species_id == 1:  # If it's a predator nearby
-                avoidance_radius_sq = (self.bound_radius * 5) ** 2  # Flee if predator is within 5 radii
-                if dist_sq < avoidance_radius_sq:
-                    # Add a force pushing away from the predator
-                    flee_force = dist_vec.normalize() * 0.005  # Adjust strength as needed
-                    self.translation_speed = (self.translation_speed + flee_force).normalize() * self.translation_speed.norm()  # Maintain speed
-
-        # Update Position 
-        # Convert world position back to position relative to parent (Vivarium origin)
-        self.position = new_pos_world
+        # Calculate the final position
+        finalPos = self.currentPos.coords + self.direction * self.step_size
+        # Update the creature's position
+        self.setCurrentPosition(Point(finalPos)) 
+        # Update creature's orientation        
+        self.rotateDirection(Point(self.direction))
 
 
 class Predator(Component, EnvironmentObject):
@@ -501,7 +472,6 @@ class Predator(Component, EnvironmentObject):
         self.update()
 
     def stepForward(self, components, tank_dimensions, vivarium):
-
         # Creature's current position
         current_pos = self.currentPos.coords
         # Probe the next position
