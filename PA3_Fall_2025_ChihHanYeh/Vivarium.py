@@ -33,7 +33,7 @@ class Food(Component, EnvironmentObject):
 
         # Sizing and color
         self.color = Ct.ColorType(1.0, 0.7, 0.1)  # orange-yellow
-        self.sphere = Sphere(Point((0, 0, 0)), shaderProg, [0.05, 0.05, 0.05], self.color)
+        self.sphere = Sphere(Point((0, 0, 0)), shaderProg, [0.1, 0.1, 0.1], self.color)
         self.addChild(self.sphere)
 
     def stepForward(self, tank_dimensions):
@@ -96,20 +96,6 @@ class Vivarium(Component):
             self.addNewObjInTank(Hunted)
             self.creatures.append(Hunted)
 
-    def spawnFood(self):
-        # Spawn a new food particle randomly near the top of the tank
-
-        # Near top of y but random x/z
-        x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)
-        y = self.tank_dimensions[1] * 0.45
-        z = random.uniform(-self.tank_dimensions[2] * 0.4, self.tank_dimensions[2] * 0.4)
-        pos = Point((x, y, z))
-
-        food = Food(self.parent, pos, self.shaderProg)
-
-        self.addNewObjInTank(food)
-        self.food_obj.append(food)
-
     def animationUpdate(self):
         """
         Update all creatures in vivarium
@@ -145,3 +131,17 @@ class Vivarium(Component):
         if isinstance(newComponent, EnvironmentObject):
             # add environment components list reference to this new object's
             newComponent.env_obj_list = self.components
+
+    def spawnFood(self):
+        # Spawn a new food particle randomly near the top of the tank
+
+        # Near top of y but random x/z
+        x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)
+        y = self.tank_dimensions[1] * 0.45
+        z = random.uniform(-self.tank_dimensions[2] * 0.4, self.tank_dimensions[2] * 0.4)
+        pos = Point((x, y, z))
+
+        food = Food(self.parent, pos, self.shaderProg)
+
+        self.addNewObjInTank(food)
+        self.food_obj.append(food)
