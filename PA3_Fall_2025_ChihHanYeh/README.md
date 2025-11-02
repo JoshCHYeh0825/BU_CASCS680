@@ -143,16 +143,17 @@ and Cohesion: Steer towards the groups' center
 
 `cohesion += n.currentPos.coords `
 
-All three of these vectors are averaged and normalized 
+All three of these vectors are averaged and normalized.
+
+The three behaviors are then combined into a weighted combination called `steer` in which the scale of each behavior is tunable with different coefficients:
 
 ```
-flock_force = self.computeFlocking(components)
-if np.linalg.norm(flock_force) > 0:
-    self.direction = (1 - self.flocking_weight) * self.direction + self.flocking_weight * flock_force
-    self.direction = self.direction / np.linalg.norm(self.direction)
+# Weighted combination
+        steer = (1.5 * separation) + (1.0 * alignment) + (0.5 * cohesion)
+        steer = safe_norm(steer)
 ```
 
-dddd
+`steer` would act as a steering vector pointing towards the flocking direction
 
 ## rotateDirection()
 
@@ -211,7 +212,7 @@ else:
 
 This is the general case. The rotation axis is computed using the cross product between the forward and target directions `axis = v1.cross3d(forward_v).normalize()`. The rotation angle is computed via the arc cosine of the dot product. Then the quarternion is set as: $q=(cos(θ/2), \hat u_x sin(θ/2), \hat u_y sin(θ/2), \hat u_z sin(θ/2))$ where $\hat u$ is the normalized axis. The rotation is set at the end using `self.setQuaternion(q)`.
 
-# EnvironmentObject.py
+# Additions to EnvironmentObject.py
 
 There are several different helper functions that were defined within EnvironmentObject.py assisting in the `stepForward()` functions used to define creature movements of both the Prey and Predator, besides `rotateDirection`.
 
@@ -268,9 +269,9 @@ def apply_repulsion(self, target, strength=0.02):
 
 `apply_repulsion` applies the same logic to the prey but normalizes the predator-prey vector and scale it by strength so the prey would be more repulsed than the predator's attraction.
 
-# Food
+# Simulating Food
 
-## Class
+## Food Class
 
 The simulating of dropping food is defined within `Vivarium.py`. The food objects would fall slowly to the bottom by the tank unless it is consumed first by the creatures they collide with. Below are a list of attribtues given to a `Food` object:
 
