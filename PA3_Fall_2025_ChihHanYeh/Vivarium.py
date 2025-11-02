@@ -137,7 +137,7 @@ class Vivarium(Component):
 
         # Near top of y but random x/z
         x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)
-        y = self.tank_dimensions[1] * 0.45
+        y = self.tank_dimensions[1] * 0.3
         z = random.uniform(-self.tank_dimensions[2] * 0.4, self.tank_dimensions[2] * 0.4)
         pos = Point((x, y, z))
 
@@ -145,3 +145,4 @@ class Vivarium(Component):
 
         self.addNewObjInTank(food)
         self.food_obj.append(food)
+        food.initialize()

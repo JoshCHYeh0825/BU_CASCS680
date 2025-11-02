@@ -389,6 +389,8 @@ class Sketch(CanvasBase):
         if chr(keycode) in "fF":
             self.vivarium.spawnFood()
             print("Food spawned in tank!")
+            print(f"Total food objects: {len(self.food_obj)}")
+
 
 
 if __name__ == "__main__":
