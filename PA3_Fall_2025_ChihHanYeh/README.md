@@ -28,7 +28,7 @@ PA3 - 3D Vivarium
 
 ### stepForward()
 
-`stepForward()` is the function implemented to both preys and predators with some subtle changes to how one interact with the other
+`def stepForward(self, components, tank_dimensions, vivarium)` is the function implemented to both preys and predators with some subtle changes to how one interact with the other
 
 * First the creature would loop over every other creature so it wouldn't interact with itself
 
@@ -65,8 +65,49 @@ if obj.species_id == 1and dist <3:
 elif obj.species_id == 2andself.detect_collision(obj):
 	normal = self.currentPos.coords - obj.currentPos.coords
 	self.reflect_direction(normal)
+
+ # Eaten when colliding with predator
+	if obj.species_id == 1 and self.detect_collision(obj):
+		vivarium.delObjInTank(self)
+                vivarium.creatures.remove(self)
+               	return
 ```
 
 `self.reflect_direction(normal)` and computing normal within the collision loop allows the creature to bounce away with other creatures with the same id.
+Additionally, when the prey collides with a predator, `delObjInTank` is called and the prey would remove itself.
 
 Next is the boundary collision and reflection behaviors of the creature with the vivarium wall.
+
+```
+# Probe the next position
+nextPos = self.currentPos.coords + self.direction * self.step_size
+# Track whether a bounce happened
+bounce = False
+
+# X-axis bouce
+if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
+	self.direction[0] *= -1
+	bounce = True
+	# Clamp inside wall
+	nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
+
+# Y-axis bounce
+if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
+	self.direction[1] *= -1
+	bounce = True
+	nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+
+# Z-axis bounce
+if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
+	self.direction[2] *= -1
+	bounce = True
+	nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
+
+# Compute final position
+finalPos = self.currentPos.coords + self.direction * self.step_size
+self.setCurrentPosition(Point(finalPos))
+
+# Only reorient if a bounce occurred — prevents rapid flipping along wall
+if bounce:
+	self.rotateDirection(Point(self.direction))
+```
