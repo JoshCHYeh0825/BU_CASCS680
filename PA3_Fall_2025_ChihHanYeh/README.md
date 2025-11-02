@@ -24,9 +24,9 @@ PA3 - 3D Vivarium
   * The middle tail segment `tail_s2` which is animated would move with limits of -30 to 30 degrees on its v-axis, just like the prey.
   * The pincers are similarly animated but limited to -10 to 30 and 10 to 30 degrees respectively for the mirrored pincors. The animated segment of the pincers are the cylinders.
 
-## Movement, Collision, and Positions
+# Movement, Collision, and Positions
 
-### stepForward()
+## stepForward()
 
 `def stepForward(self, components, tank_dimensions, vivarium)` is the function implemented to both preys and predators with some subtle changes to how one interact with the other
 
@@ -175,3 +175,60 @@ else:
 ```
 
 This is the general case. The rotation axis is computed using the cross product between the forward and target directions `axis = v1.cross3d(forward_v).normalize()`. The rotation angle is computed via the arc cosine of the dot product. Then the quarternion is set as: $q=(cos(θ/2), \hat u_x sin(θ/2), \hat u_y sin(θ/2), \hat u_z sin(θ/2))$ where $\hat u$ is the normalized axis. The rotation is set at the end using `self.setQuaternion(q)`.
+
+# EnvironmentObject.py
+
+There are several different helper functions that were defined within EnvironmentObject.py assisting in the `stepForward()` functions used to define creature movements of both the Prey and Predator, besides `rotateDirection`.
+
+```
+def distance_to(self, other):
+        # Compute Euclidean distance to another EnvironmentObject
+        return np.linalg.norm(self.currentPos.coords - other.currentPos.coords)
+```
+
+`distance_to()` is a helper function used in `stepForward()` which computes the euclidean distance between the creature and another object. Using `currentPos` the function would return a scalar distance value with the normalize function.
+
+```
+def detect_collision(self, other):
+        # Detect bounding-sphere collision
+        if self is other:
+            return False
+        dist = self.distance_to(other)
+        return dist < (self.bound_radius + other.bound_radius)
+```
+
+`detect_collision()` detects whether two creatures' bounding spheres would interact by checking if the distance between the centers of the spheres are less than the sum of the radii.
+
+```
+    def reflect_direction(self, normal):
+        # Reflect movement direction defined by normal
+        n = normal / np.linalg.norm(normal)
+        self.direction = self.direction - 2 * np.dot(self.direction, n) * n
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction)
+```
+
+`reflect_direction` reflects a movement vector off of surface after collision/bounce. The normalized collision normal vector is used to compute the rflected direction vector: $r = d - 2(d * n) n$. d is the incoming direction and r is the reflected vector. r is normalized and `rotateDirection()` iis called to visually rotate the creature to face this new direction.
+
+```
+def apply_attraction(self, target, strength=0.01):
+    delta = target.currentPos.coords - self.currentPos.coords
+    delta /= np.linalg.norm(delta)
+    self.direction += strength * delta
+    self.direction /= np.linalg.norm(self.direction)
+    self.rotateDirection(Point(self.direction))
+```
+
+`apply_attraction()` computes the vector from the predator to the prey, normalizes that vector, Gradually add the vector (fractionally) to the predator's direction before being normalized and reorientated to the creature. This steers the predator towards the prey.
+
+```
+def apply_repulsion(self, target, strength=0.02):
+    delta = self.currentPos.coords - target.currentPos.coords
+    delta /= np.linalg.norm(delta)
+    self.direction += strength * delta
+    self.direction /= np.linalg.norm(self.direction)
+    self.rotateDirection(Point(self.direction))
+
+```
+
+`apply_repulsion` applies the same logic to the prey but normalizes the predator-prey vector and scale it by strength so the prey would be more repulsed than the predator's attraction.
