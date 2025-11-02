@@ -133,7 +133,7 @@ class Vivarium(Component):
             newComponent.env_obj_list = self.components
 
     def spawnFood(self):
-        # Spawn a new food particle randomly near the top of the tank
+        # Spawn a new food object randomly near the top of the tank
 
         # Near top of y but random x/z
         x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)

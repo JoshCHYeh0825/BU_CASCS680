@@ -86,7 +86,7 @@ class EnvironmentObject:
 
         else:
             # Standard cases
-            axis = v1.cross3d(forward_v).normalize()
+            axis = v1.cross3d(v1).normalize()
             angle = math.acos(dot_prod)
             half_sin = math.sin(angle / 2.0)
             half_cos = math.cos(angle / 2.0)
