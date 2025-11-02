@@ -24,7 +24,7 @@ PA3 - 3D Vivarium
   * The middle tail segment `tail_s2` which is animated would move with limits of -30 to 30 degrees on its v-axis, just like the prey.
   * The pincers are similarly animated but limited to -10 to 30 and 10 to 30 degrees respectively for the mirrored pincors. The animated segment of the pincers are the cylinders.
 
-## Movement and Collision
+## Movement, Collision, and Positions
 
 ### stepForward()
 
@@ -102,7 +102,12 @@ if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] -
 	self.direction[2] *= -1
 	bounce = True
 	nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
+```
 
+`nextPos` is the next postiion variabl that would cehck for boundary collisions along each axis.
+For each of the three axes (x, y, z), if the new position moves beyond the wall of the vavarium (half of the tank dimension - radius of creature bounding sphere), the motion direction on the axis is inverted and the position is clamped back inside the vivarium `self.direction[i] *= -1`. This would keep the creatures within the vivarium.
+
+```
 # Compute final position
 finalPos = self.currentPos.coords + self.direction * self.step_size
 self.setCurrentPosition(Point(finalPos))
@@ -111,3 +116,62 @@ self.setCurrentPosition(Point(finalPos))
 if bounce:
 	self.rotateDirection(Point(self.direction))
 ```
+
+The final parts of `stepForward()` is the final position calculations, where the final position is updated just as `nextPos` and the predator's orientation is updated to match the direction of travesal with the call of `rotateDirection`.
+
+## rotateDIrection(v1)
+
+As mentioned above `rotateDirection` is the function that was implemented spcifically for the creature to continuously face the direction it is traversing within the bounds of the vivarium box. That way the creatures would continuously face the normal vector upon colliding with any of the walls of the environment.
+The function is defined within `ENvironmentbject.py` as part of `TODO 4`.
+
+```
+def rotateDirection(self, v1):
+    forward_v = Point([0, 0, 1])
+    v1.normalize()
+    dot_prod = forward_v.dot(v1)
+    q = Quaternion()
+```
+
+* `forward_v` defines the local "forward" facing vector (positive z-axis)
+* The target direction `v1` is normalized and dotted with `forward_v` as a measure of how aligned the creature is with `v1`
+
+### Case 1
+
+```
+if dot_prod > 0.999:
+    self.clearQuaternion()
+    return
+```
+
+If the creature's facing direction is the same as `v1` no rotation is required, `clearQuarternion()` would reset any rotational offsets.
+
+### Case 2
+
+```
+elif dot_prod < -0.999:
+    angle = math.pi
+    s = math.cos(angle / 2.0)
+    v0 = 0 * math.sin(angle / 2.0)
+    v1 = 1 * math.sin(angle / 2.0)
+    v2 = 0 * math.sin(angle / 2.0)
+    q.set(s, v0, v1, v2)
+```
+
+If the target direction is the opposite of the forward vector (180 degrees apart), a quarternion is constructed with the purpose of rotation of $\pi$ - radians around the y-axis. This ensures the creature would rotate normally when it reverse the direction.
+
+### Case 3
+
+```
+else:
+    axis = v1.cross3d(forward_v).normalize()
+    angle = math.acos(dot_prod)
+    half_sin = math.sin(angle / 2.0)
+    half_cos = math.cos(angle / 2.0)
+
+    q.set(half_cos,
+          (axis[0] * half_sin),
+          (axis[1] * half_sin),
+          (axis[2] * half_sin))
+```
+
+This is the general case. The rotation axis is computed using the cross product between the forward and target directions `axis = v1.cross3d(forward_v).normalize()`. The rotation angle is computed via the arc cosine of the dot product. Then the quarternion is set as: $q=(cos(θ/2), \hat u_x sin(θ/2), \hat u_y sin(θ/2), \hat u_z sin(θ/2))$ where $\hat u$ is the normalized axis. The rotation is set at the end using `self.setQuaternion(q)`.
