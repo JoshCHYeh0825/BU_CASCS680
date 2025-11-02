@@ -535,6 +535,7 @@ class Predator(Component, EnvironmentObject):
 
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
+        
         # Track whether a bounce happened
         bounce = False
 
