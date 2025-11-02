@@ -119,7 +119,42 @@ if bounce:
 
 The final parts of `stepForward()` is the final position calculations, where the final position is updated just as `nextPos` and the predator's orientation is updated to match the direction of travesal with the call of `rotateDirection`.
 
-## rotateDIrection(v1)
+### Flocking
+
+Within the prey's movement computation, there are additional logic written to display Boid's algorithn for flocking. Particularly through `def computeFlocking`. This method implements Boid's algorithm via three sterring rules: Separation, Alignment, and Cohesion.
+
+```
+neighbors = [c for c in creatures if c is not self and np.linalg.norm(c.currentPos.coords - self.currentPos.coords) < self.perception_radius]
+```
+
+This line ensures only nearby creatures within `perception_radius` would be considered for the flocking behavior.
+
+For each neighbor, the prey would compute Separation: Move away if too close
+
+```
+separation += offset / (dist ** 2)
+```
+
+Alignment: Match the average direction of other prey creatures
+
+`alignment += n.direction `
+
+and Cohesion: Steer towards the groups' center
+
+`cohesion += n.currentPos.coords `
+
+All three of these vectors are averaged and normalized 
+
+```
+flock_force = self.computeFlocking(components)
+if np.linalg.norm(flock_force) > 0:
+    self.direction = (1 - self.flocking_weight) * self.direction + self.flocking_weight * flock_force
+    self.direction = self.direction / np.linalg.norm(self.direction)
+```
+
+dddd
+
+## rotateDirection()
 
 As mentioned above `rotateDirection` is the function that was implemented spcifically for the creature to continuously face the direction it is traversing within the bounds of the vivarium box. That way the creatures would continuously face the normal vector upon colliding with any of the walls of the environment.
 The function is defined within `ENvironmentbject.py` as part of `TODO 4`.
@@ -232,3 +267,61 @@ def apply_repulsion(self, target, strength=0.02):
 ```
 
 `apply_repulsion` applies the same logic to the prey but normalizes the predator-prey vector and scale it by strength so the prey would be more repulsed than the predator's attraction.
+
+# Food
+
+## Class
+
+The simulating of dropping food is defined within `Vivarium.py`. The food objects would fall slowly to the bottom by the tank unless it is consumed first by the creatures they collide with. Below are a list of attribtues given to a `Food` object:
+
+* `velocity` - Small downward velocity vector [0, -0.002, 0] which controls how fast the object falls within the vivarium
+* `bound_radius` - Radius of the bounding sphere used to detect collision with creatures and the vivariu environment
+* `eaten` - A flag which tracks if the food object collides with a creature and would be consumed by any creature
+
+```
+def stepForward(self, tank_dimensions):
+    nextPos = self.currentPos.coords + self.velocity
+    bottom_y = -(tank_dimensions[1] / 2) + self.bound_radius
+    if nextPos[1] < bottom_y:
+        nextPos[1] = bottom_y
+        self.velocity = np.array([0.0, 0.0, 0.0])
+    self.setCurrentPosition(Point(nextPos))
+```
+
+The same `stepForward()` method that is used to define the creatures' movement applied to the food objects. The difference is the direction of movement is negative y and given the velocity with the attributes that were defined within `def __init__()`. Another distinct feature between this `stepForward()` from the others' is that the motion of the object is stopped when it reaches the bottom of the tank, and would not reflect.
+
+## Changes in the Vivarium Class
+
+There are several different changes made to the provided `Vivarium.py` file aside from the addition of the `Food` class.
+
+Within `def animationUpdate()` is the addition of a for loop in order to define the logic for a food object being consumed.
+
+```
+for food in self.food_obj[::-1]:
+	food.stepForward(self.tank_dimensions)
+        for creature in self.creatures:
+            dist = np.linalg.norm(np.array(creature.currentPos.coords) - + np.array(food.currentPos.coords))
+            if dist < (creature.bound_radius + food.bound_radius):
+                self.delObjInTank(food)
+                self.food_obj.remove(food)
+                break
+```
+
+The logic goes: If the distance between a creature and food object is less than the sum of their sphere radii, the `eaten` flag turns true indicative of food being eaten, then the food object is deleted from the tank and `food_obj` list using `delObjInTank()`.
+
+Food is spawned through the function `def spawnFood().`
+
+```
+def spawnFood(self):
+    x = random.uniform(-self.tank_dimensions[0] * 0.4, self.tank_dimensions[0] * 0.4)
+    y = self.tank_dimensions[1] * 0.3
+    z = random.uniform(-self.tank_dimensions[2] * 0.4, self.tank_dimensions[2] * 0.4)
+    pos = Point((x, y, z))
+
+    food = Food(self.parent, pos, self.shaderProg)
+    self.addNewObjInTank(food)
+    self.food_obj.append(food)
+    food.initialize()
+```
+
+The function would randomly generate a position near the top of the vivarium. It would then create a new instance of Food in that position, adds it to the environment with `addNewObjInTank()` whilst simultaneously updating the `food_obj` list, then calls `initialize()` to render it into the GUI.
