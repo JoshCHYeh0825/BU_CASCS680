@@ -33,7 +33,7 @@ class Food(Component, EnvironmentObject):
 
         # Sizing and color
         self.color = Ct.ColorType(1.0, 0.7, 0.1)  # orange-yellow
-        self.sphere = Sphere(Point((0, 0, 0)), shaderProg, [0.1, 0.1, 0.1], self.color)
+        self.sphere = Sphere(Point((0, 0, 0)), shaderProg, [0.05, 0.05, 0.05], self.color)
         self.addChild(self.sphere)
 
     def stepForward(self, tank_dimensions):
@@ -90,7 +90,7 @@ class Vivarium(Component):
         self.creatures.append(Hunter)
 
         # Adding the prey, setting up initial position then instantiating 2 with a for loop
-        for _ in range(5):
+        for _ in range(6):
             prey_pos = Point([random.uniform(-self.tank_dimensions[i] * 0.45, self.tank_dimensions[i] * 0.45) for i in range(3)])
             Hunted = Prey(parent, prey_pos, shaderProg)  # Use parent from Sketch
             self.addNewObjInTank(Hunted)
