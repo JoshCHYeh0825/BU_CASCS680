@@ -174,9 +174,7 @@ class ModelArm(Component):
 
 
 class Prey(Component, EnvironmentObject):
-    """
-    Prey: Creature with the appearance of a tadpole
-    """
+    
     def __init__(self, parent, position, shaderProg):
         self.species_id = 2  # ID for Prey
         self.eaten = False
@@ -234,6 +232,12 @@ class Prey(Component, EnvironmentObject):
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
         
+        # For flocking
+        self.perception_radius = 1.5     # How far they "see" neighbors
+        self.max_speed = 0.02            # Movement speed
+        self.max_force = 0.005           # How quickly they turn
+        self.flocking_weight = 0.5       # Blend factor for new steering vs old direction
+        
         # Set Orientation
         self.rotateDirection(Point(self.direction))
 
@@ -264,6 +268,7 @@ class Prey(Component, EnvironmentObject):
         self.update()  # Apply transformations
 
     def stepForward(self, components, tank_dimensions, vivarium):
+
         # Creature interactions
         for obj in vivarium.creatures:
             if obj is self:
@@ -285,7 +290,13 @@ class Prey(Component, EnvironmentObject):
                 vivarium.delObjInTank(self)
                 vivarium.creatures.remove(self)
                 return
-
+        
+        # Bonus Flocking
+        flock_force = self.computeFlocking(components)
+        if np.linalg.norm(flock_force) > 0:
+            self.direction = (1 - self.flocking_weight) * self.direction + self.flocking_weight * flock_force
+            self.direction = self.direction / np.linalg.norm(self.direction)
+            
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
         # Track whether a bounce happened
@@ -318,6 +329,45 @@ class Prey(Component, EnvironmentObject):
         if bounce:
             self.rotateDirection(Point(self.direction))
 
+    def computeFlocking(self, creatures):
+        """
+        Compute steering direction based on nearby creatures (Boids algorithm)
+        """
+        neighbors = [c for c in creatures if c is not self and np.linalg.norm(c.currentPos.coords - self.currentPos.coords) < self.perception_radius]
+
+        if not neighbors:
+            return np.zeros(3)
+
+        # Initialize forces
+        separation = np.zeros(3)
+        alignment = np.zeros(3)
+        cohesion = np.zeros(3)
+
+        for n in neighbors:
+            offset = self.currentPos.coords - n.currentPos.coords
+            dist = np.linalg.norm(offset)
+            if dist > 0:
+                separation += offset / (dist ** 2)  # stronger repulsion when closer
+            alignment += n.direction
+            cohesion += n.currentPos.coords
+
+        alignment /= len(neighbors)
+        cohesion = (cohesion / len(neighbors)) - self.currentPos.coords
+
+        # Normalize each force
+        def safe_norm(v):
+            return v / np.linalg.norm(v) if np.linalg.norm(v) > 0 else v
+
+        separation = safe_norm(separation)
+        alignment = safe_norm(alignment)
+        cohesion = safe_norm(cohesion)
+
+        # Weighted combination
+        steer = (1.5 * separation) + (1.0 * alignment) + (0.5 * cohesion)
+        steer = safe_norm(steer)
+
+        return steer
+
 
 class Predator(Component, EnvironmentObject):
     """
@@ -325,7 +375,7 @@ class Predator(Component, EnvironmentObject):
     """
     def __init__(self, parent, position, shaderProg):
         self.contextParent = parent
-        self.species_id = 1         # ID for Prey
+        self.species_id = 1         # ID for Predator
         
         # Creature is too big so this is to scale everything down
         sizing_scale = 0.5
@@ -358,7 +408,7 @@ class Predator(Component, EnvironmentObject):
         # Compose pre-rotation for segment 1
         R1 = self.glUtility.rotate(180, self.vAxis, False)
         self.tail_s1.setPreRotation(R1)
-        
+
         self.body.addChild(self.tail_s1)
 
         # Segment 2 (Middle) - Attached to s1, needs similar pre-rotation to align orientation
@@ -376,7 +426,7 @@ class Predator(Component, EnvironmentObject):
         pincer_s2_size = [i * sizing_scale for i in [0.08, 0.08, 0.2]]
         pincer_attach_z = body_size[2]/2 - (0.1 * sizing_scale)
         pincer_attach_x = body_size[0]/2
-        
+
         # Right Pincer
         self.pincer_r1 = Cylinder(Point((pincer_attach_x, 0, pincer_attach_z)), shaderProg, pincer_s1_size, color_pincer)
         self.body.addChild(self.pincer_r1)
@@ -451,11 +501,26 @@ class Predator(Component, EnvironmentObject):
 
         self.update()
 
+    def applyUprightCorrection(self):
+        """
+        Apply a small correction to keep the creature upright (y-axis pointing up)
+        """
+        up = np.array([0, 1, 0])  # World up
+        facing = self.direction / np.linalg.norm(self.direction)
+        right = np.cross(facing, up)
+        if np.linalg.norm(right) < 1e-6:
+            return
+        corrected_forward = np.cross(up, right)
+        corrected_forward /= np.linalg.norm(corrected_forward)
+
+        self.direction = 0.9 * self.direction + 0.1 * corrected_forward
+        self.direction /= np.linalg.norm(self.direction)                                
+
     def stepForward(self, components, tank_dimensions, vivarium):
         # Creature interactions
         for obj in vivarium.creatures:
             if obj is self:
-                continue
+                continue    
 
             dist = self.distance_to(obj)
 
@@ -497,5 +562,5 @@ class Predator(Component, EnvironmentObject):
         self.setCurrentPosition(Point(finalPos))
 
         # Only reorient if a bounce occurred — prevents rapid flipping along wall
-        if bounce:
-            self.rotateDirection(Point(self.direction))
+        self.rotateDirection(Point(self.direction))
+        self.applyUprightCorrection()
