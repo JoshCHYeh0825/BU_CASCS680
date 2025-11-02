@@ -276,11 +276,11 @@ class Prey(Component, EnvironmentObject):
 
             dist = self.distance_to(obj)
 
-            # Chasing prey
+            # Evading predator
             if obj.species_id == 1 and dist < 3:
                 self.apply_repulsion(obj, strength=0.02)
 
-            # Bounce away from non prey/other predator upon collision
+            # Bounce away from non predator/other prey upon collision
             elif obj.species_id == 2 and self.detect_collision(obj):
                 normal = self.currentPos.coords - obj.currentPos.coords
                 self.reflect_direction(normal)
@@ -291,7 +291,7 @@ class Prey(Component, EnvironmentObject):
                 vivarium.creatures.remove(self)
                 return
         
-        # Bonus Flocking
+        # Flocking
         flock_force = self.computeFlocking(components)
         if np.linalg.norm(flock_force) > 0:
             self.direction = (1 - self.flocking_weight) * self.direction + self.flocking_weight * flock_force
