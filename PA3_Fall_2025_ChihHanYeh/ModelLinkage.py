@@ -180,8 +180,9 @@ class Prey(Component, EnvironmentObject):
         self.eaten = False
         
         # Setting colors
-        color_body = Ct.ColorType(0.8, 0.7, 0.5)  # light brown/beige
-        color_tail = Ct.ColorType(0.6, 0.5, 0.3)  # A slightly darker shade
+        color_body = Ct.ColorType(0.8, 0.7, 0.5)
+        color_tail = Ct.ColorType(0.6, 0.5, 0.3)
+        color_legs = Ct.ColorType(0.6, 0.5, 0.2)
         
         # Setting shapes for the creature
         sizing_scale = 0.5
@@ -215,15 +216,51 @@ class Prey(Component, EnvironmentObject):
         self.tail_s3 = Cone(Point((0, 0, tail_s3_size[2])), shaderProg, tail_s3_size, color_tail)
         self.tail_s2.addChild(self.tail_s3)
 
+        # Legs
+        leg_s1_size = [i * sizing_scale for i in [0.06, 0.06, 0.2]]
+        leg_s2_size = [i * sizing_scale for i in [0.05, 0.05, 0.15]]
+        foot_size = [i * sizing_scale for i in [0.07, 0.03, 0.1]]
+        
+        # Leg attachment point
+        leg_att_x = body_size[0] * 0.3
+        leg_att_y = -body_size[1] * 0.8
+        leg_att_z = -body_size[2] * 0.2
+         
+        # Right leg
+        self.leg_r1 = Cylinder(Point((leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.body.addChild(self.leg_r1)
+        self.leg_r2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_r1.addChild(self.leg_r2)
+        self.leg_rfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
+        self.leg_r2.addChild(self.leg_rfoot)
+        
+        # Left leg (Mirrors Right)
+        self.leg_l1 = Cylinder(Point((-leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.body.addChild(self.leg_l1)
+        self.leg_l2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_l1.addChild(self.leg_l2)
+        self.leg_lfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
+        self.leg_l2.addChild(self.leg_lfoot)
+        
         # Components Storage
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3]
-        self.components = [self.body, self.tail_s1, self.tail_s2, self.tail_s3]
+        self.legs_segments = [self.leg_r1, self.leg_r2, self.leg_rfoot,
+                              self.leg_l1, self.leg_l2, self.leg_lfoot]
+        self.components = [self.body, self.tail_s1, self.tail_s2, self.tail_s3,
+                           self.leg_r1, self.leg_r2, self.leg_rfoot, self.leg_l1,
+                           self.leg_l2, self.leg_rfoot]
         self.componentList = self.components
         self.componentDict = {
             "body": self.body,
             "tail_s1": self.tail_s1,
             "tail_s2": self.tail_s2,
-            "tail_s3": self.tail_s3
+            "tail_s3": self.tail_s3,
+            "leg_r1": self.leg_r1,
+            "leg_r2": self.leg_r2,
+            "leg_rfoot": self.leg_rfoot,
+            "leg_l1": self.leg_l1,
+            "leg_l2": self.leg_l2,
+            "leg_lfoot": self.leg_lfoot
         }
 
         # Animation & Collision
@@ -250,12 +287,16 @@ class Prey(Component, EnvironmentObject):
         self.setDefaultPose()
 
     def setJointLimits(self):
-        # Tail segment 1 wiggles left/right around the vertical (Y/v) axis
+        # Tail segment 2 wiggles left/right around the vertical (Y/v) axis
         self.tail_s2.setRotateExtent(self.tail_s2.vAxis, -30, 30)
+        self.leg_r1.setRotateExtent(self.leg_r1.vAxis, -20, 20)
+        self.leg_l1.setRotateExtent(self.leg_l1.vAxis, -20, 20)
 
     def setDefaultPose(self):
         # Start with tail straight
         self.tail_s2.setDefaultAngle(0, self.tail_s2.vAxis)
+        self.leg_r1.setDefaultAngle(0, self.leg_r1.vAxis)
+        self.leg_l1.setDefaultAngle(0, self.leg_l1.vAxis)
 
     def animationUpdate(self):
         # Tail animation
@@ -264,6 +305,15 @@ class Prey(Component, EnvironmentObject):
         if self.tail_s2.vAngle <= self.tail_s2.vRange[0] or self.tail_s2.vAngle >= self.tail_s2.vRange[1]:
             self.tail_wiggle_speed *= -1
             self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
+
+        # Legs animation
+        self.leg_r1.rotate(0.8, self.leg_r1.vAxis)
+        self.leg_l1.rotate(-0.8, self.leg_l1.vAxis)
+        # Direction reversal
+        # Reverse direction when reaching limits
+        if (self.leg_r1.vAngle <= self.leg_r1.vRange[0]) or (self.leg_r1.vAngle >= self.leg_r1.vRange[1]):
+            self.leg_r1.vAngle = np.clip(self.leg_r1.vAngle, *self.leg_r1.vRange)
+            self.tail_wiggle_speed *= -1
 
         self.update()  # Apply transformations
 
