@@ -217,9 +217,9 @@ class Prey(Component, EnvironmentObject):
         self.tail_s2.addChild(self.tail_s3)
 
         # Legs
-        leg_s1_size = [i * sizing_scale for i in [0.03, 0.03, 0.2]]
-        leg_s2_size = [i * sizing_scale for i in [0.02, 0.02, 0.1]]
-        foot_size = [i * sizing_scale for i in [0.03, 0.03, 0.1]]
+        leg_s1_size = [i * sizing_scale for i in [0.03, 0.03, 0.15]]
+        leg_s2_size = [i * sizing_scale for i in [0.03, 0.03, 0.08]]
+        foot_size = [i * sizing_scale for i in [0.02, 0.02, 0.04]]
         
         # Leg attachment point
         leg_att_x = body_size[0] * 0.3
@@ -316,8 +316,8 @@ class Prey(Component, EnvironmentObject):
             self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
 
         # Legs animation
-        self.leg_r1.rotate(self.leg_paddle_speed, self.leg_r1.uAxis)
-        self.leg_l1.rotate(-self.leg_paddle_speed, self.leg_l1.uAxis)
+        self.leg_r1.rotate(-self.leg_paddle_speed, self.leg_r1.uAxis)
+        self.leg_l1.rotate(self.leg_paddle_speed, self.leg_l1.uAxis)
 
         # Direction reversal
         # Reverse direction when reaching limits
@@ -476,8 +476,8 @@ class Predator(Component, EnvironmentObject):
         
         # Legs
         leg_s1_size = [i * sizing_scale for i in [0.04, 0.04, 0.2]]
-        leg_s2_size = [i * sizing_scale for i in [0.02, 0.02, 0.1]]
-        foot_size = [i * sizing_scale for i in [0.04, 0.04, 0.2]]
+        leg_s2_size = [i * sizing_scale for i in [0.04, 0.04, 0.1]]
+        foot_size = [i * sizing_scale for i in [0.025, 0.025, 0.05]]
         
         # Leg attachment point
         leg_att_x = body_size[0] * 0.3
@@ -579,8 +579,8 @@ class Predator(Component, EnvironmentObject):
             self.pincer_snap_speed *= -1
 
         # Legs animation
-        self.leg_r1.rotate(self.leg_paddle_speed, self.leg_r1.uAxis)
-        self.leg_l1.rotate(-self.leg_paddle_speed, self.leg_l1.uAxis)
+        self.leg_r1.rotate(-self.leg_paddle_speed, self.leg_r1.uAxis)
+        self.leg_l1.rotate(self.leg_paddle_speed, self.leg_l1.uAxis)
 
         # Direction reversal
         # Reverse direction when reaching limits
