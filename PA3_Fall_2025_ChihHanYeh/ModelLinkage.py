@@ -217,28 +217,40 @@ class Prey(Component, EnvironmentObject):
         self.tail_s2.addChild(self.tail_s3)
 
         # Legs
-        leg_s1_size = [i * sizing_scale for i in [0.06, 0.06, 0.2]]
-        leg_s2_size = [i * sizing_scale for i in [0.05, 0.05, 0.15]]
-        foot_size = [i * sizing_scale for i in [0.07, 0.03, 0.1]]
+        leg_s1_size = [i * sizing_scale for i in [0.03, 0.03, 0.2]]
+        leg_s2_size = [i * sizing_scale for i in [0.02, 0.02, 0.1]]
+        foot_size = [i * sizing_scale for i in [0.03, 0.03, 0.1]]
         
         # Leg attachment point
         leg_att_x = body_size[0] * 0.3
         leg_att_y = -body_size[1] * 0.8
         leg_att_z = -body_size[2] * 0.2
-         
+        
+        # Orientation transforms
+        leg_flip = self.glUtility.rotate(180, self.vAxis, False)     # flip legs backward
+        leg_bend = self.glUtility.rotate(-40, self.uAxis, False)     # bend lower segment downward
+
         # Right leg
         self.leg_r1 = Cylinder(Point((leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.leg_r1.setPreRotation(leg_flip)
         self.body.addChild(self.leg_r1)
+
         self.leg_r2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_r2.setPreRotation(leg_bend)
         self.leg_r1.addChild(self.leg_r2)
+
         self.leg_rfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
         self.leg_r2.addChild(self.leg_rfoot)
-        
+
         # Left leg (Mirrors Right)
         self.leg_l1 = Cylinder(Point((-leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.leg_l1.setPreRotation(leg_flip)
         self.body.addChild(self.leg_l1)
+
         self.leg_l2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_l2.setPreRotation(leg_bend)
         self.leg_l1.addChild(self.leg_l2)
+        
         self.leg_lfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
         self.leg_l2.addChild(self.leg_lfoot)
         
@@ -308,12 +320,12 @@ class Prey(Component, EnvironmentObject):
             self.tail_s2.vAngle = max(min(self.tail_s2.vAngle, self.tail_s2.vRange[1]), self.tail_s2.vRange[0])
 
         # Legs animation
-        self.leg_r1.rotate(0.8, self.leg_r1.vAxis)
-        self.leg_l1.rotate(-0.8, self.leg_l1.vAxis)
+        self.leg_r1.rotate(self.leg_paddle_speed, self.leg_r1.uAxis)
+        self.leg_l1.rotate(-self.leg_paddle_speed, self.leg_l1.uAxis)
+
         # Direction reversal
         # Reverse direction when reaching limits
-        if (self.leg_r1.vAngle <= self.leg_r1.vRange[0]) or (self.leg_r1.vAngle >= self.leg_r1.vRange[1]):
-            self.leg_r1.vAngle = np.clip(self.leg_r1.vAngle, *self.leg_r1.vRange)
+        if (self.leg_r1.uAngle <= self.leg_r1.uRange[0]) or (self.leg_r1.uAngle >= self.leg_r1.uRange[1]):
             self.leg_paddle_speed *= -1
 
         self.update()  # Apply transformations
@@ -448,13 +460,11 @@ class Predator(Component, EnvironmentObject):
         # Tail
         # Tail segment sizes and scaling
         tail_s1_size = [i * sizing_scale for i in [0.1, 0.1, 0.25]]
-        tail_s1_length = tail_s1_size[2]
         tail_s2_size = [i * sizing_scale for i in [0.1, 0.1, 0.3]]
-        tail_s2_length = tail_s2_size[2]
 
         # Segment 1 (Base)
-        base_attach_z = -body_size[2] * 0.6 - tail_s1_length / 2.0
-        self.tail_s1 = Cylinder(Point((0, 0, base_attach_z + tail_s1_length / 2)), shaderProg, tail_s1_size, color_tail)
+        base_attach_z = -body_size[2] * 0.6 - tail_s1_size[2] / 2.0
+        self.tail_s1 = Cylinder(Point((0, 0, base_attach_z + tail_s1_size[2] / 2)), shaderProg, tail_s1_size, color_tail)
 
         # Compose pre-rotation for segment 1
         R1 = self.glUtility.rotate(180, self.vAxis, False)
@@ -464,12 +474,12 @@ class Predator(Component, EnvironmentObject):
 
         # Segment 2 (Middle) - Attached to s1, needs similar pre-rotation to align orientation
         # Position segment 2 at the end of segment 1 (half-length offset)
-        self.tail_s2 = Cylinder(Point((0, 0, 2*tail_s1_length)), shaderProg, tail_s2_size, color_tail)
+        self.tail_s2 = Cylinder(Point((0, 0, 2*tail_s1_size[2])), shaderProg, tail_s2_size, color_tail)
         self.tail_s1.addChild(self.tail_s2)
 
         # Segment 3 (Tip) - Cone attached to the end of segment 2
         tail_s3_size = [i * sizing_scale for i in [0.1, 0.1, 0.2]]
-        self.tail_s3 = Cone(Point((0, 0, tail_s2_length)), shaderProg, tail_s3_size, color_tail)
+        self.tail_s3 = Cone(Point((0, 0, tail_s2_size[2])), shaderProg, tail_s3_size, color_tail)
         self.tail_s2.addChild(self.tail_s3)
 
         # Pincer
