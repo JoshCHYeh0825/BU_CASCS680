@@ -227,8 +227,9 @@ class Prey(Component, EnvironmentObject):
         leg_att_z = -body_size[2] * 0.2
         
         # Orientation transforms
-        leg_flip = self.glUtility.rotate(180, self.vAxis, False)     # flip legs backward
-        leg_bend = self.glUtility.rotate(-40, self.uAxis, False)     # bend lower segment downward
+        leg_flip = self.glUtility.rotate(180, self.vAxis, False)
+        leg_mirror_l = self.glUtility.rotate(180, self.uAxis, False)
+        leg_bend = self.glUtility.rotate(-40, self.uAxis, False)
 
         # Right leg
         self.leg_r1 = Cylinder(Point((leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
@@ -244,7 +245,7 @@ class Prey(Component, EnvironmentObject):
 
         # Left leg (Mirrors Right)
         self.leg_l1 = Cylinder(Point((-leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
-        self.leg_l1.setPreRotation(leg_flip)
+        self.leg_l1.setPreRotation(leg_flip @ leg_mirror_l)
         self.body.addChild(self.leg_l1)
 
         self.leg_l2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
@@ -261,7 +262,7 @@ class Prey(Component, EnvironmentObject):
         self.components = [self.body, self.tail_s1, self.tail_s2, self.tail_s3,
                            self.leg_r1, self.leg_r2, self.leg_rfoot, self.leg_l1,
                            self.leg_l2, self.leg_lfoot]
-        self.componentList = list(self.components)
+        self.componentList = self.components
         self.componentDict = {
             "body": self.body,
             "tail_s1": self.tail_s1,
@@ -277,7 +278,7 @@ class Prey(Component, EnvironmentObject):
 
         # Animation & Collision
         self.tail_wiggle_speed = 0.8
-        self.leg_paddle_speed = 0.5
+        self.leg_paddle_speed = 1.0
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
@@ -323,11 +324,12 @@ class Prey(Component, EnvironmentObject):
         if (self.leg_r1.uAngle <= self.leg_r1.uRange[0]) or (self.leg_r1.uAngle >= self.leg_r1.uRange[1]) or \
            (self.leg_l1.uAngle <= self.leg_l1.uRange[0]) or (self.leg_l1.uAngle >= self.leg_l1.uRange[1]):
             self.leg_paddle_speed *= -1
+            self.leg_r1.vAngle = np.clip(self.leg_r1.uAngle, *self.leg_r1.uRange)
+            self.leg_l1.vAngle = np.clip(self.leg_l1.uAngle, *self.leg_l1.uRange)
 
         self.update()  # Apply transformations
 
     def stepForward(self, components, tank_dimensions, vivarium):
-
         # Creature interactions
         for obj in vivarium.creatures:
             if obj is self:
@@ -336,51 +338,71 @@ class Prey(Component, EnvironmentObject):
             dist = self.distance_to(obj)
 
             # Evading predator
-            if obj.species_id == 1 and dist < 3:
+            if obj.species_id == 2 and dist < 3:
                 self.apply_repulsion(obj, strength=0.02)
 
-            # Bounce away from non predator/other prey upon collision
-            elif obj.species_id == 2 and self.detect_collision(obj):
+            # Bounce away from non prey/other predator upon collision
+            elif obj.species_id == 1 and self.detect_collision(obj):
                 normal = self.currentPos.coords - obj.currentPos.coords
                 self.reflect_direction(normal)
 
-            # Eaten when colliding with predator
-            if obj.species_id == 1 and self.detect_collision(obj):
-                vivarium.delObjInTank(self)
-                vivarium.creatures.remove(self)
-                return
-
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
-        # Track whether a bounce happened
-        bounce = False
 
-        # X-axis bouce
-        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
-            self.direction[0] *= -1
-            bounce = True
-            # Clamp inside wall
-            nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
+        # Wall collision reflection
+        half_x, half_y, half_z = tank_dimensions[0] / 2, tank_dimensions[1] / 2, tank_dimensions[2] / 2
+        bounce = False
+        normals = []
+
+        # X-axis bounce
+        if (nextPos[0] + self.bound_radius) > half_x:
+            normals.append(np.array([-1, 0, 0]))
+            nextPos[0] = half_x - self.bound_radius
+        elif (nextPos[0] - self.bound_radius) < -half_x:
+            normals.append(np.array([1, 0, 0]))
+            nextPos[0] = -half_x + self.bound_radius
 
         # Y-axis bounce
-        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
-            self.direction[1] *= -1
-            bounce = True
-            nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+        if (nextPos[1] + self.bound_radius) > half_y:
+            normals.append(np.array([0, -1, 0]))
+            nextPos[1] = half_y - self.bound_radius
+        elif (nextPos[1] - self.bound_radius) < -half_y:
+            normals.append(np.array([0, 1, 0]))
+            nextPos[1] = -half_y + self.bound_radius
 
         # Z-axis bounce
-        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
-            self.direction[2] *= -1
+        if (nextPos[2] + self.bound_radius) > half_z:
+            normals.append(np.array([0, 0, -1]))
+            nextPos[2] = half_z - self.bound_radius
+        elif (nextPos[2] - self.bound_radius) < -half_z:
+            normals.append(np.array([0, 0, 1]))
+            nextPos[2] = -half_z + self.bound_radius
+
+        # Reflect direction across all hit walls
+        if normals:
+            for n in normals:
+                n = n / np.linalg.norm(n)
+                self.direction = self.direction - 2 * np.dot(self.direction, n) * n
+            self.direction /= np.linalg.norm(self.direction)
             bounce = True
-            nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
 
-        # Compute final position
-        finalPos = self.currentPos.coords + self.direction * self.step_size
-        self.setCurrentPosition(Point(finalPos))
-
-        # Only reorient if a bounce occurred — prevents rapid flipping along wall
+        self.setCurrentPosition(Point(nextPos))
         if bounce:
             self.rotateDirection(Point(self.direction))
+            self.applyUprightCorrection()
+
+    def applyUprightCorrection(self):
+
+        up = np.array([0, 1, 0])  # World up
+        facing = self.direction / np.linalg.norm(self.direction)
+        right = np.cross(facing, up)
+        if np.linalg.norm(right) < 1e-6:
+            return
+        corrected_forward = np.cross(up, right)
+        corrected_forward /= np.linalg.norm(corrected_forward)
+
+        self.direction = 0.95 * self.direction + 0.5 * corrected_forward
+        self.direction /= np.linalg.norm(self.direction)
 
 
 class Predator(Component, EnvironmentObject):
@@ -398,6 +420,7 @@ class Predator(Component, EnvironmentObject):
         color_body = Ct.ColorType(0, 1, 0)      # Bright green
         color_tail = Ct.ColorType(0.8, 0.9, 0)  # Soft Green
         color_pincer = Ct.ColorType(0, 0.4, 0)  # Dark Green
+        color_legs = Ct.ColorType(0, 0.5, 0)
         
         # Setting shapes for the creature
         # Main body -- Parent
@@ -451,23 +474,67 @@ class Predator(Component, EnvironmentObject):
         self.pincer_l2 = Cone(Point((0, 0, pincer_s1_size[2])), shaderProg, pincer_s2_size, color_pincer)
         self.pincer_l1.addChild(self.pincer_l2)            
         
+        # Legs
+        leg_s1_size = [i * sizing_scale for i in [0.04, 0.04, 0.2]]
+        leg_s2_size = [i * sizing_scale for i in [0.02, 0.02, 0.1]]
+        foot_size = [i * sizing_scale for i in [0.04, 0.04, 0.2]]
+        
+        # Leg attachment point
+        leg_att_x = body_size[0] * 0.3
+        leg_att_y = -body_size[1] * 0.8
+        leg_att_z = -body_size[2] * 0.2
+        
+        # Orientation transforms
+        leg_flip = self.glUtility.rotate(180, self.vAxis, False)
+        leg_mirror_l = self.glUtility.rotate(180, self.uAxis, False)
+        leg_bend = self.glUtility.rotate(-40, self.uAxis, False)
+        
+        # Right leg
+        self.leg_r1 = Cylinder(Point((leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.leg_r1.setPreRotation(leg_flip)
+        self.body.addChild(self.leg_r1)
+
+        self.leg_r2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_r2.setPreRotation(leg_bend)
+        self.leg_r1.addChild(self.leg_r2)
+
+        self.leg_rfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
+        self.leg_r2.addChild(self.leg_rfoot)
+
+        # Left leg (Mirrors Right)
+        self.leg_l1 = Cylinder(Point((-leg_att_x, leg_att_y, leg_att_z)), shaderProg, leg_s1_size, color_legs)
+        self.leg_l1.setPreRotation(leg_flip @ leg_mirror_l)
+        self.body.addChild(self.leg_l1)
+
+        self.leg_l2 = Cylinder(Point((0, 0, leg_s1_size[2])), shaderProg, leg_s2_size, color_legs)
+        self.leg_l2.setPreRotation(leg_bend)
+        self.leg_l1.addChild(self.leg_l2)
+        
+        self.leg_lfoot = Sphere(Point((0, 0, leg_s2_size[2])), shaderProg, foot_size, color_legs)
+        self.leg_l2.addChild(self.leg_lfoot)
+        
         # Components Storage
         self.tail_segments = [self.tail_s1, self.tail_s2, self.tail_s3]
         self.right_pincer = [self.pincer_r1, self.pincer_r2]
         self.left_pincer = [self.pincer_l1, self.pincer_l2]
+        self.legs_segments = [self.leg_r1, self.leg_r2, self.leg_rfoot,
+                              self.leg_l1, self.leg_l2, self.leg_lfoot]
         # Include ALL parts for animation and selection
-        self.components = [self.body] + self.tail_segments + self.right_pincer + self.left_pincer
+        self.components = [self.body] + self.tail_segments + self.right_pincer + self.left_pincer + self.legs_segments
         self.componentList = self.components  # For Sketch.py
         self.componentDict = {
             "body": self.body,
             "tail_s1": self.tail_s1, "tail_s2": self.tail_s2, "tail_s3": self.tail_s3,
             "pincer_r1": self.pincer_r1, "pincer_r2": self.pincer_r2,
-            "pincer_l1": self.pincer_l1, "pincer_l2": self.pincer_l2
-        }
+            "pincer_l1": self.pincer_l1, "pincer_l2": self.pincer_l2,
+            "leg_r1": self.leg_r1, "leg_r2": self.leg_r2, "leg_rfoot": self.leg_rfoot,
+            "leg_l1": self.leg_l1, "leg_l2": self.leg_l2,"leg_lfoot": self.leg_lfoot
+            }
 
         # Animation & Collision Setup
         self.tail_wiggle_speed = 0.8
-        self.pincer_snap_speed = 0.5   
+        self.pincer_snap_speed = 0.5
+        self.leg_paddle_speed = 1.0
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
@@ -511,6 +578,18 @@ class Predator(Component, EnvironmentObject):
            self.pincer_l1.vAngle == self.pincer_l1.vRange[1]:
             self.pincer_snap_speed *= -1
 
+        # Legs animation
+        self.leg_r1.rotate(self.leg_paddle_speed, self.leg_r1.uAxis)
+        self.leg_l1.rotate(-self.leg_paddle_speed, self.leg_l1.uAxis)
+
+        # Direction reversal
+        # Reverse direction when reaching limits
+        if (self.leg_r1.uAngle <= self.leg_r1.uRange[0]) or (self.leg_r1.uAngle >= self.leg_r1.uRange[1]) or \
+           (self.leg_l1.uAngle <= self.leg_l1.uRange[0]) or (self.leg_l1.uAngle >= self.leg_l1.uRange[1]):
+            self.leg_paddle_speed *= -1
+            self.leg_r1.vAngle = np.clip(self.leg_r1.uAngle, *self.leg_r1.uRange)
+            self.leg_l1.vAngle = np.clip(self.leg_l1.uAngle, *self.leg_l1.uRange)
+
         self.update()
 
     def applyUprightCorrection(self):
@@ -525,7 +604,7 @@ class Predator(Component, EnvironmentObject):
         corrected_forward = np.cross(up, right)
         corrected_forward /= np.linalg.norm(corrected_forward)
 
-        self.direction = 0.9 * self.direction + 0.1 * corrected_forward
+        self.direction = 0.95 * self.direction + 0.05 * corrected_forward
         self.direction /= np.linalg.norm(self.direction)                                
 
     def stepForward(self, components, tank_dimensions, vivarium):
@@ -538,7 +617,13 @@ class Predator(Component, EnvironmentObject):
 
             # Chasing prey
             if obj.species_id == 2 and dist < 4.5:
-                self.apply_attraction(obj, strength=0.01)
+                self.apply_attraction(obj, strength=0.02)
+                
+            # Eating prey if close enough
+            if obj.species_id == 2 and self.detect_collision(obj):
+                vivarium.delObjInTank(obj)
+                vivarium.creatures.remove(obj)
+                continue  # prey is gone
 
             # Bounce away from non prey/other predator upon collision
             elif obj.species_id == 1 and self.detect_collision(obj):
@@ -547,33 +632,45 @@ class Predator(Component, EnvironmentObject):
 
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
-        
-        # Track whether a bounce happened
-        bounce = False
 
-        # X-axis bouce
-        if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
-            self.direction[0] *= -1
-            bounce = True
-            # Clamp inside wall
-            nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
+        # Wall collision reflection
+        half_x, half_y, half_z = tank_dimensions[0] / 2, tank_dimensions[1] / 2, tank_dimensions[2] / 2
+        bounce = False
+        normals = []
+
+        # X-axis bounce
+        if (nextPos[0] + self.bound_radius) > half_x:
+            normals.append(np.array([-1, 0, 0]))
+            nextPos[0] = half_x - self.bound_radius
+        elif (nextPos[0] - self.bound_radius) < -half_x:
+            normals.append(np.array([1, 0, 0]))
+            nextPos[0] = -half_x + self.bound_radius
 
         # Y-axis bounce
-        if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
-            self.direction[1] *= -1
-            bounce = True
-            nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+        if (nextPos[1] + self.bound_radius) > half_y:
+            normals.append(np.array([0, -1, 0]))
+            nextPos[1] = half_y - self.bound_radius
+        elif (nextPos[1] - self.bound_radius) < -half_y:
+            normals.append(np.array([0, 1, 0]))
+            nextPos[1] = -half_y + self.bound_radius
 
         # Z-axis bounce
-        if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
-            self.direction[2] *= -1
+        if (nextPos[2] + self.bound_radius) > half_z:
+            normals.append(np.array([0, 0, -1]))
+            nextPos[2] = half_z - self.bound_radius
+        elif (nextPos[2] - self.bound_radius) < -half_z:
+            normals.append(np.array([0, 0, 1]))
+            nextPos[2] = -half_z + self.bound_radius
+
+        # Reflect direction across all hit walls
+        if normals:
+            for n in normals:
+                n = n / np.linalg.norm(n)
+                self.direction = self.direction - 2 * np.dot(self.direction, n) * n
+            self.direction /= np.linalg.norm(self.direction)
             bounce = True
-            nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
 
-        # Compute final position
-        finalPos = self.currentPos.coords + self.direction * self.step_size
-        self.setCurrentPosition(Point(finalPos))
-
-        # Only reorient if a bounce occurred — prevents rapid flipping along wall
-        self.rotateDirection(Point(self.direction))
-        self.applyUprightCorrection()
+        self.setCurrentPosition(Point(nextPos))
+        if bounce:
+            self.rotateDirection(Point(self.direction))
+            self.applyUprightCorrection()

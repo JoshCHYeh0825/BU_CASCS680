@@ -57,42 +57,39 @@ class EnvironmentObject:
         #   direction in which it swims. Remember that we require your creatures to be movable in 3 dimensions,
         #   so they should be able to face any direction in 3D space.
         
-    def rotateDirection(self, v1, local_forward=Point([0, 0, 1])):
+    def rotateDirection(self, v1, local_forward=Point([0, 0, 1]), world_up=Point([0, 1, 0])):
         """
         change this environment object's orientation to v1.
         :param v1: targed facing direction
         :type v1: Point
         """
-        # Normalize both vectors
-        v1 = Point(v1.coords / np.linalg.norm(v1.coords))
-        fwd = Point(local_forward.coords / np.linalg.norm(local_forward.coords))
-
-        dot_prod = fwd.dot(v1)
-        q = Quaternion()
+        # Normalize input vectors
+        target = np.array(v1.coords, dtype=float)
+        target /= np.linalg.norm(target)
+        fwd = np.array(local_forward.coords, dtype=float)
+        fwd /= np.linalg.norm(fwd)
         
         # Edge cases
-        if dot_prod > 0.999:
-            self.clearQuaternion()
-            return
-        
-        elif dot_prod < -0.999:
-            # Flip and face backwards
-            angle = math.pi
-            # Calculate quarternion components (s, v0 to v2)
-            s = math.cos(angle / 2.0)
-            v = np.array([0, 1, 0]) * math.sin(angle / 2.0)
-            q.set(s, v[0], v[1], v[2])
+        axis = np.cross(target, fwd)
 
+        if np.linalg.norm(axis) < 1e-6:
+            # if vectors are parallel or anti-parallel
+            if np.dot(fwd, target) > 0.999:
+                self.clearQuaternion()
+                return
+            else:
+                # 180° rotation around up-axis
+                axis = np.array(world_up.coords)
+                angle = math.pi
         else:
-            # Standard cases
-            axis = fwd.cross3d(v1).normalize()
-            angle = math.acos(np.clip(dot_prod, -1.0, 1.0))
-            half_sin = math.sin(angle / 2.0)
-            half_cos = math.cos(angle / 2.0)
-            q.set(half_cos, axis[0] * half_sin,
-                  axis[1] * half_sin,
-                  axis[2] * half_sin)
+            axis /= np.linalg.norm(axis)
+            angle = math.acos(np.clip(np.dot(fwd, target), -1.0, 1.0))
 
+        # Construct quaternion
+        s = math.cos(angle / 2.0)
+        x, y, z = axis * math.sin(angle / 2.0)
+        q = Quaternion()
+        q.set(s, x, y, z)
         self.setQuaternion(q)
 
     def distance_to(self, other):

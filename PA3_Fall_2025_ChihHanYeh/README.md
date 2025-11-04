@@ -122,7 +122,7 @@ The final parts of `stepForward()` is the final position calculations, where the
 ## rotateDirection()
 
 As mentioned above `rotateDirection` is the function that was implemented spcifically for the creature to continuously face the direction it is traversing within the bounds of the vivarium box. That way the creatures would continuously face the normal vector upon colliding with any of the walls of the environment.
-The function is defined within `ENvironmentbject.py` as part of `TODO 4`.
+The function is defined within `Environmentbject.py` as part of `TODO 4`.
 
 ```
 def rotateDirection(self, v1):
