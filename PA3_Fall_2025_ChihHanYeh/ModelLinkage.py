@@ -281,15 +281,10 @@ class Prey(Component, EnvironmentObject):
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
-        
-        # For flocking
-        self.perception_radius = 1.5     # How far they "see" neighbors
-        self.max_speed = 0.02            # Movement speed
-        self.max_force = 0.005           # How quickly they turn
-        self.flocking_weight = 0.5       # Blend factor for new steering vs old direction
-        
+
         # Set Orientation
-        self.rotateDirection(Point(self.direction))
+        self.forwardAxis = np.array([0, 0, 1])
+        self.rotateDirection(Point(self.direction), local_forward=Point([0, 0, 1]))
 
         # Properties for wall collisions
         self.bound_center = Point((0, 0, 0))
@@ -325,7 +320,8 @@ class Prey(Component, EnvironmentObject):
 
         # Direction reversal
         # Reverse direction when reaching limits
-        if (self.leg_r1.uAngle <= self.leg_r1.uRange[0]) or (self.leg_r1.uAngle >= self.leg_r1.uRange[1]):
+        if (self.leg_r1.uAngle <= self.leg_r1.uRange[0]) or (self.leg_r1.uAngle >= self.leg_r1.uRange[1]) or \
+           (self.leg_l1.uAngle <= self.leg_l1.uRange[0]) or (self.leg_l1.uAngle >= self.leg_l1.uRange[1]):
             self.leg_paddle_speed *= -1
 
         self.update()  # Apply transformations
@@ -353,13 +349,7 @@ class Prey(Component, EnvironmentObject):
                 vivarium.delObjInTank(self)
                 vivarium.creatures.remove(self)
                 return
-        
-        # Flocking
-        flock_force = self.computeFlocking(components)
-        if np.linalg.norm(flock_force) > 0:
-            self.direction = (1 - self.flocking_weight) * self.direction + self.flocking_weight * flock_force
-            self.direction = self.direction / np.linalg.norm(self.direction)
-            
+
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
         # Track whether a bounce happened
@@ -391,45 +381,6 @@ class Prey(Component, EnvironmentObject):
         # Only reorient if a bounce occurred — prevents rapid flipping along wall
         if bounce:
             self.rotateDirection(Point(self.direction))
-
-    def computeFlocking(self, creatures):
-        """
-        Compute steering direction based on nearby creatures (Boids algorithm)
-        """
-        neighbors = [c for c in creatures if c is not self and np.linalg.norm(c.currentPos.coords - self.currentPos.coords) < self.perception_radius]
-
-        if not neighbors:
-            return np.zeros(3)
-
-        # Initialize forces
-        separation = np.zeros(3)
-        alignment = np.zeros(3)
-        cohesion = np.zeros(3)
-
-        for n in neighbors:
-            offset = self.currentPos.coords - n.currentPos.coords
-            dist = np.linalg.norm(offset)
-            if dist > 0:
-                separation += offset / (dist ** 2)  # stronger repulsion when closer
-            alignment += n.direction
-            cohesion += n.currentPos.coords
-
-        alignment /= len(neighbors)
-        cohesion = (cohesion / len(neighbors)) - self.currentPos.coords
-
-        # Normalize each force
-        def safe_norm(v):
-            return v / np.linalg.norm(v) if np.linalg.norm(v) > 0 else v
-
-        separation = safe_norm(separation)
-        alignment = safe_norm(alignment)
-        cohesion = safe_norm(cohesion)
-
-        # Weighted combination
-        steer = (1.5 * separation) + (1.0 * alignment) + (0.5 * cohesion)
-        steer = safe_norm(steer)
-
-        return steer
 
 
 class Predator(Component, EnvironmentObject):

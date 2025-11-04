@@ -57,44 +57,41 @@ class EnvironmentObject:
         #   direction in which it swims. Remember that we require your creatures to be movable in 3 dimensions,
         #   so they should be able to face any direction in 3D space.
         
-    def rotateDirection(self, v1):
+    def rotateDirection(self, v1, local_forward=Point([0, 0, 1])):
         """
         change this environment object's orientation to v1.
         :param v1: targed facing direction
         :type v1: Point
         """
-        # Establish creature's local axis and basis for front facing directions
-        forward_v = Point([0, 0, 1])
-        v1.normalize()
-        dot_prod = forward_v.dot(v1)
-        q = Quaternion()
+        # Normalize both vectors
+        v1 = Point(v1.coords / np.linalg.norm(v1.coords))
+        fwd = Point(local_forward.coords / np.linalg.norm(local_forward.coords))
 
+        dot_prod = fwd.dot(v1)
+        q = Quaternion()
+        
         # Edge cases
         if dot_prod > 0.999:
             self.clearQuaternion()
             return
-
+        
         elif dot_prod < -0.999:
             # Flip and face backwards
             angle = math.pi
             # Calculate quarternion components (s, v0 to v2)
             s = math.cos(angle / 2.0)
-            v0 = 0 * math.sin(angle / 2.0)  # v0 = 0
-            v1 = 1 * math.sin(angle / 2.0)  # v1 = 1
-            v2 = 0 * math.sin(angle / 2.0)  # v2 = 0
-            q.set(s, v0, v1, v2)
+            v = np.array([0, 1, 0]) * math.sin(angle / 2.0)
+            q.set(s, v[0], v[1], v[2])
 
         else:
             # Standard cases
-            axis = v1.cross3d(forward_v).normalize()
-            angle = math.acos(dot_prod)
+            axis = fwd.cross3d(v1).normalize()
+            angle = math.acos(np.clip(dot_prod, -1.0, 1.0))
             half_sin = math.sin(angle / 2.0)
             half_cos = math.cos(angle / 2.0)
-
-            q.set(half_cos, 
-                  (axis[0] * half_sin), 
-                  (axis[1] * half_sin), 
-                  (axis[2] * half_sin))
+            q.set(half_cos, axis[0] * half_sin,
+                  axis[1] * half_sin,
+                  axis[2] * half_sin)
 
         self.setQuaternion(q)
 

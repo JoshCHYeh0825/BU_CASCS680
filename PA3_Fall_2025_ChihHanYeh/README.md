@@ -119,42 +119,6 @@ if bounce:
 
 The final parts of `stepForward()` is the final position calculations, where the final position is updated just as `nextPos` and the predator's orientation is updated to match the direction of travesal with the call of `rotateDirection`.
 
-### Flocking
-
-Within the prey's movement computation, there are additional logic written to display Boid's algorithn for flocking. Particularly through `def computeFlocking`. This method implements Boid's algorithm via three sterring rules: Separation, Alignment, and Cohesion.
-
-```
-neighbors = [c for c in creatures if c is not self and np.linalg.norm(c.currentPos.coords - self.currentPos.coords) < self.perception_radius]
-```
-
-This line ensures only nearby creatures within `perception_radius` would be considered for the flocking behavior.
-
-For each neighbor, the prey would compute Separation: Move away if too close
-
-```
-separation += offset / (dist ** 2)
-```
-
-Alignment: Match the average direction of other prey creatures
-
-`alignment += n.direction `
-
-and Cohesion: Steer towards the groups' center
-
-`cohesion += n.currentPos.coords `
-
-All three of these vectors are averaged and normalized.
-
-The three behaviors are then combined into a weighted combination called `steer` in which the scale of each behavior is tunable with different coefficients:
-
-```
-# Weighted combination
-        steer = (1.5 * separation) + (1.0 * alignment) + (0.5 * cohesion)
-        steer = safe_norm(steer)
-```
-
-`steer` would act as a steering vector pointing towards the flocking direction
-
 ## rotateDirection()
 
 As mentioned above `rotateDirection` is the function that was implemented spcifically for the creature to continuously face the direction it is traversing within the bounds of the vivarium box. That way the creatures would continuously face the normal vector upon colliding with any of the walls of the environment.
