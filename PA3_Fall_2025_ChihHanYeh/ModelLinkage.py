@@ -248,8 +248,8 @@ class Prey(Component, EnvironmentObject):
                               self.leg_l1, self.leg_l2, self.leg_lfoot]
         self.components = [self.body, self.tail_s1, self.tail_s2, self.tail_s3,
                            self.leg_r1, self.leg_r2, self.leg_rfoot, self.leg_l1,
-                           self.leg_l2, self.leg_rfoot]
-        self.componentList = self.components
+                           self.leg_l2, self.leg_lfoot]
+        self.componentList = list(self.components)
         self.componentDict = {
             "body": self.body,
             "tail_s1": self.tail_s1,
@@ -264,7 +264,8 @@ class Prey(Component, EnvironmentObject):
         }
 
         # Animation & Collision
-        self.tail_wiggle_speed = 0.5
+        self.tail_wiggle_speed = 0.8
+        self.leg_paddle_speed = 0.5
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
         self.step_size = 0.01
@@ -313,7 +314,7 @@ class Prey(Component, EnvironmentObject):
         # Reverse direction when reaching limits
         if (self.leg_r1.vAngle <= self.leg_r1.vRange[0]) or (self.leg_r1.vAngle >= self.leg_r1.vRange[1]):
             self.leg_r1.vAngle = np.clip(self.leg_r1.vAngle, *self.leg_r1.vRange)
-            self.tail_wiggle_speed *= -1
+            self.leg_paddle_speed *= -1
 
         self.update()  # Apply transformations
 
@@ -504,7 +505,7 @@ class Predator(Component, EnvironmentObject):
         }
 
         # Animation & Collision Setup
-        self.tail_wiggle_speed = 0.5
+        self.tail_wiggle_speed = 0.8
         self.pincer_snap_speed = 0.5   
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
