@@ -138,7 +138,25 @@ class Sketch(CanvasBase):
         self.last_mouse_leftPosition = [0, 0]
         self.last_mouse_middlePosition = [0, 0]
         self.components = []
-
+    def resetTestScene(self):
+        # Remove all current creatures and food
+        for obj in self.creatures[:]:
+            self.delObjInTank(obj)
+            self.creatures.remove(obj)
+        for obj in self.food_obj[:]:
+            self.delObjInTank(obj)
+            self.food_obj.remove(obj)
+        # Add just one predator, one prey
+        tank_dims = self.tank_dimensions
+        predator_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+        predator = Predator(self.parent, predator_pos, self.shaderProg)
+        self.addNewObjInTank(predator)
+        self.creatures.append(predator)
+        # One prey
+        prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+        prey = Prey(self.parent, prey_pos, self.shaderProg)
+        self.addNewObjInTank(prey)
+        self.creatures.append(prey)
         # add components to top level
         self.resetView()
 
@@ -377,12 +395,14 @@ class Sketch(CanvasBase):
         if chr(keycode) in "rR":
             # reset viewing angle
             self.viewing_quaternion = Quaternion()
+            self.vivarium.resetDefaultScene()
             self.update()
 
         # A test scene with only one (1) predator and one (1) prey
         if chr(keycode) in "tT":
             # reset viewing angle
             self.viewing_quaternion = Quaternion()
+            self.vivarium.resetTestScene()
             self.update()
 
         # Dropping food after pressing 'f' key
