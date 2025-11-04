@@ -337,14 +337,14 @@ class Prey(Component, EnvironmentObject):
             dist = self.distance_to(obj)
 
             if obj.species_id == 1:  # predator
-                force = self.potential_force(obj, strength=0.05, range_scale=2.0, mode="repel")
+                force = self.potential_force(obj, strength=0.06, range_scale=2.0, mode="repel")
                 self.direction += force
 
         # Attraction to nearby food
         for food in vivarium.food_obj:
             dist = np.linalg.norm(np.array(food.currentPos.coords) - np.array(self.currentPos.coords))
             if dist < 4.0:
-                force = self.potential_force(food, strength=0.02, range_scale=2.0, mode="attract")
+                force = self.potential_force(food, strength=0.08, range_scale=2.0, mode="attract")
                 self.direction += force
 
         # Re-orientate + Normalize
