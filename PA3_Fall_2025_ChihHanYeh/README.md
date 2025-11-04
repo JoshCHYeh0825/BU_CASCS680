@@ -327,7 +327,7 @@ Test case implementations were done within `Interrupt_Keyboard` method.
 
 ## Test Case 1: Reset
 
-When the 'R' key is pressed the following happens to reset the scenario (2 preys, 1 predator):
+When the 'R' key is pressed the following are called to reset the scenario (2 preys, 1 predator):
 
 * `self.topLevelComponent.clear()`  - Clears all existing child objects (all creatures and food)
 * `self.vivarium = Vivarium(self, self.shaderProg, sceneType='default')` - Instantiates a new Vivarium object, rebuilding the tank, environment objects and the default number of creatures
@@ -337,10 +337,22 @@ When the 'R' key is pressed the following happens to reset the scenario (2 preys
 
 ## Test Case 2: 1-Prey 1-Predator
 
-When the 'T' key is pressed the following happens to reset the scenario (1 prey, 1 predator):
+When the 'T' key is pressed the 1 prey, 1 predator scenario occurs. It is the same logic as Test Case 1 but the only differences are:
 
-* `self.topLevelComponent.clear()`  - Clears all existing child objects (all creatures and food)
-* `self.vivarium = Vivarium(self, self.shaderProg, sceneType='default')` - Instantiates a new Vivarium object, rebuilding the tank, environment objects and the default number of creatures
-* `self.topLevelComponent.addChild(self.vivarium)` - Adds the vivarium object back into the render tree
-* `self.topLevelComponent.initialize()` - Calls any transformation initilizations
-* `self.components = self.vivarium.components` - Refreshes the list of objects to be rendered
+* `self.vivarium = Vivarium(self, self.shaderProg, sceneType='test')` - Vivarium constructor checks `sceneType` and do something when `'test'` is passed
+* The `'test'` flag would clear the existing vivarium and spawns a new one with 1 predator, 1 prey; this is done within `Vivarium __initialization__`
+
+  ```
+          if sceneType == 'test':
+              # Test scene: 1 predator, 1 prey
+              predator_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+              predator = Predator(parent, predator_pos, shaderProg)
+              self.addNewObjInTank(predator)
+              self.creatures.append(predator)
+
+              prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+              prey = Prey(parent, prey_pos, shaderProg)
+              self.addNewObjInTank(prey)
+              self.creatures.append(prey)
+          else:
+  ```
