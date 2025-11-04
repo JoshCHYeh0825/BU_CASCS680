@@ -110,18 +110,31 @@ class EnvironmentObject:
         self.direction /= np.linalg.norm(self.direction)
         self.rotateDirection(Point(self.direction))
 
-    def apply_attraction(self, target, strength=0.01):
-        # Move slightly towards a target object.
-        delta = target.currentPos.coords - self.currentPos.coords
-        delta /= np.linalg.norm(delta)
-        self.direction += strength * delta
-        self.direction /= np.linalg.norm(self.direction)
-        self.rotateDirection(Point(self.direction))
+    def potential_force(self, target, strength=0.02, range_scale=1.5, mode="attract"):
+        """
+        Computes gaussian potential function for potential of attraction between objects and creatures.
+        mode: "attract" (negative gradient of attractive potential)
+            "repel"   (negative gradient of repulsive potential)
+        """
+        delta = np.array(target.currentPos.coords) - np.array(self.currentPos.coords)
+        dist = np.linalg.norm(delta)
+        if dist < 1e-6:
+            return np.zeros(3)
 
-    def apply_repulsion(self, target, strength=0.02):
-        # Move slightly away from a target object.
-        delta = self.currentPos.coords - target.currentPos.coords
-        delta /= np.linalg.norm(delta)
-        self.direction += strength * delta
-        self.direction /= np.linalg.norm(self.direction)
-        self.rotateDirection(Point(self.direction))
+        dir_vec = delta / dist
+        sigma = range_scale
+
+        # Gaussian-shaped influence
+        exp_term = np.exp(- (dist / sigma)**2)
+
+        if mode == "attract":
+            # Attraction
+            force_mag = strength * exp_term
+            return force_mag * dir_vec
+
+        elif mode == "repel":
+            # Repulsion
+            force_mag = strength * (1.0 / (dist**2 + 1e-3)) * exp_term * 5.0
+            return -force_mag * dir_vec
+
+        return np.zeros(3)

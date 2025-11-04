@@ -174,7 +174,7 @@ class ModelArm(Component):
 
 
 class Prey(Component, EnvironmentObject):
-    
+
     def __init__(self, parent, position, shaderProg):
         self.species_id = 2  # ID for Prey
         self.eaten = False
@@ -281,7 +281,7 @@ class Prey(Component, EnvironmentObject):
         self.leg_paddle_speed = 1.0
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
-        self.step_size = 0.01
+        self.step_size = 0.02
 
         # Set Orientation
         self.forwardAxis = np.array([0, 0, 1])
@@ -330,21 +330,28 @@ class Prey(Component, EnvironmentObject):
         self.update()  # Apply transformations
 
     def stepForward(self, components, tank_dimensions, vivarium):
-        # Creature interactions
+        # Avoid predators
         for obj in vivarium.creatures:
             if obj is self:
                 continue
-
             dist = self.distance_to(obj)
 
-            # Evading predator
-            if obj.species_id == 2 and dist < 3:
-                self.apply_repulsion(obj, strength=0.02)
+            if obj.species_id == 1:  # predator
+                force = self.potential_force(obj, strength=0.05, range_scale=2.0, mode="repel")
+                self.direction += force
 
-            # Bounce away from non prey/other predator upon collision
-            elif obj.species_id == 1 and self.detect_collision(obj):
-                normal = self.currentPos.coords - obj.currentPos.coords
-                self.reflect_direction(normal)
+        # Attraction to nearby food
+        for food in vivarium.food_obj:
+            dist = np.linalg.norm(np.array(food.currentPos.coords) - np.array(self.currentPos.coords))
+            if dist < 4.0:
+                force = self.potential_force(food, strength=0.02, range_scale=2.0, mode="attract")
+                self.direction += force
+
+        # Re-orientate + Normalize
+        self.direction /= np.linalg.norm(self.direction)
+        self.applyUprightCorrection()
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction))
 
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
@@ -387,13 +394,13 @@ class Prey(Component, EnvironmentObject):
             bounce = True
 
         self.setCurrentPosition(Point(nextPos))
+
         if bounce:
             self.rotateDirection(Point(self.direction))
             self.applyUprightCorrection()
 
     def applyUprightCorrection(self):
-
-        up = np.array([0, 1, 0])  # World up
+        up = np.array([0, 1, 0])
         facing = self.direction / np.linalg.norm(self.direction)
         right = np.cross(facing, up)
         if np.linalg.norm(right) < 1e-6:
@@ -401,7 +408,8 @@ class Prey(Component, EnvironmentObject):
         corrected_forward = np.cross(up, right)
         corrected_forward /= np.linalg.norm(corrected_forward)
 
-        self.direction = 0.95 * self.direction + 0.5 * corrected_forward
+        # Blend: mostly keep current direction, slightly bias upright
+        self.direction = 0.9 * self.direction + 0.1 * corrected_forward
         self.direction /= np.linalg.norm(self.direction)
 
 
@@ -537,7 +545,7 @@ class Predator(Component, EnvironmentObject):
         self.leg_paddle_speed = 1.0
         self.direction = np.random.random(3)
         self.direction = self.direction / np.linalg.norm(self.direction)
-        self.step_size = 0.01
+        self.step_size = 0.02
         
         # Set Orientation
         self.rotateDirection(Point(self.direction))
@@ -608,27 +616,35 @@ class Predator(Component, EnvironmentObject):
         self.direction /= np.linalg.norm(self.direction)                                
 
     def stepForward(self, components, tank_dimensions, vivarium):
-        # Creature interactions
-        for obj in vivarium.creatures:
+        # Chases prey
+        for obj in list(vivarium.creatures):
             if obj is self:
-                continue    
-
-            dist = self.distance_to(obj)
-
-            # Chasing prey
-            if obj.species_id == 2 and dist < 4.5:
-                self.apply_attraction(obj, strength=0.02)
+                continue
+            if obj.species_id == 2:
+                # Attraction to prey
+                force = self.potential_force(obj, strength=0.08, range_scale=3.0, mode="attract")
+                self.direction += force
                 
-            # Eating prey if close enough
-            if obj.species_id == 2 and self.detect_collision(obj):
-                vivarium.delObjInTank(obj)
-                vivarium.creatures.remove(obj)
-                continue  # prey is gone
+                # Check for collision
+                dist = np.linalg.norm(np.array(obj.currentPos.coords) - np.array(self.currentPos.coords))
+                if dist < (self.bound_radius + obj.bound_radius) * 0.8:
+                    obj.eaten = True
+                    vivarium.delObjInTank(obj)
+                    vivarium.creatures.remove(obj)
+                    break
 
-            # Bounce away from non prey/other predator upon collision
-            elif obj.species_id == 1 and self.detect_collision(obj):
-                normal = self.currentPos.coords - obj.currentPos.coords
-                self.reflect_direction(normal)
+        # Attraction to nearby food
+        for food in vivarium.food_obj:
+            dist = np.linalg.norm(np.array(food.currentPos.coords) - np.array(self.currentPos.coords))
+            if dist < 3.0:
+                food_force = self.potential_force(food, strength=0.10, range_scale=2.5, mode="attract")
+                self.direction += food_force
+
+        # Re-orientate + Normalize
+        self.direction /= np.linalg.norm(self.direction)
+        self.applyUprightCorrection()
+        self.direction /= np.linalg.norm(self.direction)
+        self.rotateDirection(Point(self.direction))
 
         # Probe the next position
         nextPos = self.currentPos.coords + self.direction * self.step_size
@@ -671,6 +687,7 @@ class Predator(Component, EnvironmentObject):
             bounce = True
 
         self.setCurrentPosition(Point(nextPos))
+
         if bounce:
             self.rotateDirection(Point(self.direction))
             self.applyUprightCorrection()
