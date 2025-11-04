@@ -10,9 +10,11 @@ PA3 - 3D Vivarium
 
 * Components
   * A spherical main body that uses a `Sphere`.
-  * Two cylinders and a cone tip acting as the tail that would be animated.
+  * Two cylinders and a cone tip acting as the tail that would be animated
+  * Mirrored legs using two cylinders and an ellipsoid as a foot, placed below the tail.
 * Joint limitations and movement
   * The middle tail segment `tail_s2` which is animated would move with limits of -30 to 30 degrees on its v-axis, acting as if it is a tail.
+  * The first leg segments `leg_r1` and `leg_l1` are the animated portions of their limbs, limited to -20 to 20 degrees of rotation on its uAxis.
 
 ## Predator
 
@@ -20,9 +22,11 @@ PA3 - 3D Vivarium
   * A spherical main body that uses a `Sphere`.
   * Two cylinders and a cone tip acting as the tail that would be animated.
   * Mirrored symmetrical cylinders and cones acting as pincers that would also be animated.
+  * Mirrored legs using two cylinders and an ellipsoid as a foot, placed below the tail.
 * Joint limitations and movement
   * The middle tail segment `tail_s2` which is animated would move with limits of -30 to 30 degrees on its v-axis, just like the prey.
   * The pincers are similarly animated but limited to -10 to 30 and 10 to 30 degrees respectively for the mirrored pincors. The animated segment of the pincers are the cylinders.
+  * The first leg segments `leg_r1` and `leg_l1` are the animated portions of their limbs, limited to -20 to 20 degrees of rotation on its uAxis.
 
 # Movement, Collision, and Positions
 
@@ -42,39 +46,43 @@ for obj in vivarium.creatures:
   For the predator:
 
   ```
-  # Chasing prey
-  if obj.species_id == 2 and dist < 4.5:
-  	self.apply_attraction(obj, strength=0.01)
+  		# Chasing prey
+  if obj.species_id == 2:
+  	# Attraction to prey
+  	force = self.potential_force(obj, strength=0.08, range_scale=3.0, mode="attract")
+  	self.direction += force
 
-  # Bounce away from non prey/other predator upon collision
-  elif obj.species_id == 1 and self.detect_collision(obj):
-  	normal = self.currentPos.coords - obj.currentPos.coords
-  	self.reflect_direction(normal)
+  	# Check for collision
+  	dist = np.linalg.norm(np.array(obj.currentPos.coords) - np.array(self.currentPos.coords))
+  	if dist < (self.bound_radius + obj.bound_radius) * 0.8:
+  		obj.eaten = True
+  		vivarium.delObjInTank(obj)
+  		vivarium.creatures.remove(obj)
+  		break
   ```
 
-  `obj.species_id` identifies if the creature is a prey or predator, with prey being 2 and predator being 1. If the predator is within the certain range (4.5) of the prey it would be attracted towards it, otherwise it would bounce away.
+  `obj.species_id` identifies if the creature is a prey or predator, with prey being 2 and predator being 1. If the predator is within the certain range (3.0) of the prey it would be attracted towards it, otherwise it would bounce away. The logic will then check for collision with prey objects, if true would flag them as eaten and calls vivarium's `delObjInTank` method and remove the `creatures` list.
 
 For the prey:
 
 ```
  # Evading predator
-if obj.species_id == 1and dist <3:
-	self.apply_repulsion(obj, strength=0.02)
-
-# Bounce away from non prey/other predator upon collision
-elif obj.species_id == 2andself.detect_collision(obj):
-	normal = self.currentPos.coords - obj.currentPos.coords
-	self.reflect_direction(normal)
-
- # Eaten when colliding with predator
-	if obj.species_id == 1 and self.detect_collision(obj):
-		vivarium.delObjInTank(self)
-                vivarium.creatures.remove(self)
-               	return
+if obj.species_id == 1:  # predator
+	force = self.potential_force(obj, strength=0.06, range_scale=2.0, mode="repel")
+	self.direction += force
 ```
 
 `self.reflect_direction(normal)` and computing normal within the collision loop allows the creature to bounce away with other creatures with the same id.
-Additionally, when the prey collides with a predator, `delObjInTank` is called and the prey would remove itself.
+
+Both types of creatures are also implemented with a food attraction logic (shown down below) which uses the same logic as Predator's logic of attraction to prey
+
+```
+for food in vivarium.food_obj:
+	dist = np.linalg.norm(np.array(food.currentPos.coords) - np.array(self.currentPos.coords))
+	if dist < 3.0:
+	food_force = self.potential_force(food, strength=0.10, range_scale=2.5, mode="attract")
+	self.direction += food_force
+```
 
 Next is the boundary collision and reflection behaviors of the creature with the vivarium wall.
 
