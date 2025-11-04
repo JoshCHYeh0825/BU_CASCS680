@@ -84,48 +84,62 @@ for food in vivarium.food_obj:
 	self.direction += food_force
 ```
 
+
+
+Both creatures would also require reorientation (front facing direction of traversal and being upright) when chasing or repelling other animals but also general traversal within the tank itself.
+
 Next is the boundary collision and reflection behaviors of the creature with the vivarium wall.
 
 ```
-# Probe the next position
-nextPos = self.currentPos.coords + self.direction * self.step_size
-# Track whether a bounce happened
-bounce = False
+# Wall collision reflection
+        half_x, half_y, half_z = tank_dimensions[0] / 2, tank_dimensions[1] / 2, tank_dimensions[2] / 2
+        bounce = False
+        normals = []
 
-# X-axis bouce
-if ((nextPos[0] + self.bound_radius) > tank_dimensions[0] / 2) or ((nextPos[0] - self.bound_radius) < -(tank_dimensions[0] / 2)):
-	self.direction[0] *= -1
-	bounce = True
-	# Clamp inside wall
-	nextPos[0] = np.clip(nextPos[0], -(tank_dimensions[0] / 2 - self.bound_radius), (tank_dimensions[0] / 2 - self.bound_radius))
+        # X-axis bounce
+        if (nextPos[0] + self.bound_radius) > half_x:
+            normals.append(np.array([-1, 0, 0]))
+            nextPos[0] = half_x - self.bound_radius
+        elif (nextPos[0] - self.bound_radius) < -half_x:
+            normals.append(np.array([1, 0, 0]))
+            nextPos[0] = -half_x + self.bound_radius
 
-# Y-axis bounce
-if ((nextPos[1] + self.bound_radius) > tank_dimensions[1] / 2) or ((nextPos[1] - self.bound_radius) < -(tank_dimensions[1] / 2)):
-	self.direction[1] *= -1
-	bounce = True
-	nextPos[1] = np.clip(nextPos[1], -(tank_dimensions[1] / 2 - self.bound_radius), (tank_dimensions[1] / 2 - self.bound_radius))
+        # Y-axis bounce
+        if (nextPos[1] + self.bound_radius) > half_y:
+            normals.append(np.array([0, -1, 0]))
+            nextPos[1] = half_y - self.bound_radius
+        elif (nextPos[1] - self.bound_radius) < -half_y:
+            normals.append(np.array([0, 1, 0]))
+            nextPos[1] = -half_y + self.bound_radius
 
-# Z-axis bounce
-if ((nextPos[2] + self.bound_radius) > tank_dimensions[2] / 2) or ((nextPos[2] - self.bound_radius) < -(tank_dimensions[2] / 2)):
-	self.direction[2] *= -1
-	bounce = True
-	nextPos[2] = np.clip(nextPos[2], -(tank_dimensions[2] / 2 - self.bound_radius), (tank_dimensions[2] / 2 - self.bound_radius))
+        # Z-axis bounce
+        if (nextPos[2] + self.bound_radius) > half_z:
+            normals.append(np.array([0, 0, -1]))
+            nextPos[2] = half_z - self.bound_radius
+        elif (nextPos[2] - self.bound_radius) < -half_z:
+            normals.append(np.array([0, 0, 1]))
+            nextPos[2] = -half_z + self.bound_radius
 ```
 
-`nextPos` is the next postiion variabl that would cehck for boundary collisions along each axis.
-For each of the three axes (x, y, z), if the new position moves beyond the wall of the vavarium (half of the tank dimension - radius of creature bounding sphere), the motion direction on the axis is inverted and the position is clamped back inside the vivarium `self.direction[i] *= -1`. This would keep the creatures within the vivarium.
+`nextPos` is the next postiion variabl that would cehck for boundary collisions along each axis. For each of the three axes (x, y, z), if the new position moves beyond the wall of the vavarium (half of the tank dimension - radius of creature bounding sphere), the motion direction on the axis is inverted and the position is clamped back inside the vivarium `self.direction[i] *= -1`. This would keep the creatures within the vivarium.
 
 ```
-# Compute final position
-finalPos = self.currentPos.coords + self.direction * self.step_size
-self.setCurrentPosition(Point(finalPos))
-
-# Only reorient if a bounce occurred — prevents rapid flipping along wall
-if bounce:
-	self.rotateDirection(Point(self.direction))
+        # Reflect direction across all hit walls
+        if normals:
+            for n in normals:
+                n = n / np.linalg.norm(n)
+                self.direction = self.direction - 2 * np.dot(self.direction, n) * n
+            self.direction /= np.linalg.norm(self.direction)
+            bounce = True
 ```
 
-The final parts of `stepForward()` is the final position calculations, where the final position is updated just as `nextPos` and the predator's orientation is updated to match the direction of travesal with the call of `rotateDirection`.
+The above is a logic that computes the reflection when a creature bounces of a wall. `normals` is a list of normal vectors of the walls, the wall normal is normalized (ensuring it is a unit vector) and compute the mirrored reflection. The resultant vector is re-normalized to keep it as a unit vector, then the bounce flag is turned True which also tells teh function to reapply rotation and upright correction.
+
+```
+        if bounce:
+            self.rotateDirection(Point(self.direction))
+            self.applyUprightCorrection()
+```
 
 ## rotateDirection()
 
@@ -184,7 +198,7 @@ else:
 
 This is the general case. The rotation axis is computed using the cross product between the forward and target directions `axis = v1.cross3d(forward_v).normalize()`. The rotation angle is computed via the arc cosine of the dot product. Then the quarternion is set as: $q=(cos(θ/2), \hat u_x sin(θ/2), \hat u_y sin(θ/2), \hat u_z sin(θ/2))$ where $\hat u$ is the normalized axis. The rotation is set at the end using `self.setQuaternion(q)`.
 
-# Additions to EnvironmentObject.py
+# Helper and Potential Functions EnvironmentObject.py
 
 There are several different helper functions that were defined within EnvironmentObject.py assisting in the `stepForward()` functions used to define creature movements of both the Prey and Predator, besides `rotateDirection`.
 
@@ -218,28 +232,36 @@ def detect_collision(self, other):
 
 `reflect_direction` reflects a movement vector off of surface after collision/bounce. The normalized collision normal vector is used to compute the rflected direction vector: $r = d - 2(d * n) n$. d is the incoming direction and r is the reflected vector. r is normalized and `rotateDirection()` iis called to visually rotate the creature to face this new direction.
 
-```
-def apply_attraction(self, target, strength=0.01):
-    delta = target.currentPos.coords - self.currentPos.coords
-    delta /= np.linalg.norm(delta)
-    self.direction += strength * delta
-    self.direction /= np.linalg.norm(self.direction)
-    self.rotateDirection(Point(self.direction))
-```
-
-`apply_attraction()` computes the vector from the predator to the prey, normalizes that vector, Gradually add the vector (fractionally) to the predator's direction before being normalized and reorientated to the creature. This steers the predator towards the prey.
+`def potential_force()` is a unified function that models both attraction and repulsion. It computes a continuous foce vector which the magnitude is dependent on the distance between the creature and their target.
 
 ```
-def apply_repulsion(self, target, strength=0.02):
-    delta = self.currentPos.coords - target.currentPos.coords
-    delta /= np.linalg.norm(delta)
-    self.direction += strength * delta
-    self.direction /= np.linalg.norm(self.direction)
-    self.rotateDirection(Point(self.direction))
+ delta = np.array(target.currentPos.coords) - np.array(self.currentPos.coords)
+        dist = np.linalg.norm(delta)
+        if dist < 1e-6:
+            return np.zeros(3)
 
+        dir_vec = delta / dist
+        sigma = range_scale
+
+        # Gaussian-shaped influence
+        exp_term = np.exp(- (dist / sigma)**2)
+
+        if mode == "attract":
+            # Attraction
+            force_mag = strength * exp_term
+            return force_mag * dir_vec
+
+        elif mode == "repel":
+            # Repulsion
+            force_mag = strength * (1.0 / (dist**2 + 1e-3)) * exp_term * 5.0
+            return -force_mag * dir_vec
+
+        return np.zeros(3)
 ```
 
-`apply_repulsion` applies the same logic to the prey but normalizes the predator-prey vector and scale it by strength so the prey would be more repulsed than the predator's attraction.
+* The mode argument controls whether to apply attraction or repulsion to the potential.
+* Force magnitude decays with distance.
+* Predator-prey and creature-food interactions are based off of this method computing the potential function.
 
 # Simulating Food
 
@@ -298,3 +320,27 @@ def spawnFood(self):
 ```
 
 The function would randomly generate a position near the top of the vivarium. It would then create a new instance of Food in that position, adds it to the environment with `addNewObjInTank()` whilst simultaneously updating the `food_obj` list, then calls `initialize()` to render it into the GUI.
+
+# Test Case Implementation
+
+Test case implementations were done within `Interrupt_Keyboard` method.
+
+## Test Case 1: Reset
+
+When the 'R' key is pressed the following happens to reset the scenario (2 preys, 1 predator):
+
+* `self.topLevelComponent.clear()`  - Clears all existing child objects (all creatures and food)
+* `self.vivarium = Vivarium(self, self.shaderProg, sceneType='default')` - Instantiates a new Vivarium object, rebuilding the tank, environment objects and the default number of creatures
+* `self.topLevelComponent.addChild(self.vivarium)` - Adds the vivarium object back into the render tree
+* `self.topLevelComponent.initialize()` - Calls any transformation initilizations
+* `self.components = self.vivarium.components` - Refreshes the list of objects to be rendered
+
+## Test Case 2: 1-Prey 1-Predator
+
+When the 'T' key is pressed the following happens to reset the scenario (1 prey, 1 predator):
+
+* `self.topLevelComponent.clear()`  - Clears all existing child objects (all creatures and food)
+* `self.vivarium = Vivarium(self, self.shaderProg, sceneType='default')` - Instantiates a new Vivarium object, rebuilding the tank, environment objects and the default number of creatures
+* `self.topLevelComponent.addChild(self.vivarium)` - Adds the vivarium object back into the render tree
+* `self.topLevelComponent.initialize()` - Calls any transformation initilizations
+* `self.components = self.vivarium.components` - Refreshes the list of objects to be rendered
