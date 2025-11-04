@@ -65,7 +65,7 @@ class Vivarium(Component):
     #     the vivarium and remain there within the tank until eaten.
     #     * The food should disappear once it has been eaten. Food is eaten by the first creature that touches it.
 
-    def __init__(self, parent, shaderProg):
+    def __init__(self, parent, shaderProg, sceneType='default'):
         self.parent = parent
         self.shaderProg = shaderProg
 
@@ -82,19 +82,31 @@ class Vivarium(Component):
         self.creatures = []  # Separate list for prey and predator
         self.food_obj = []  # List for food objects
 
-        # Adding the creatures: 2 preys, 1 predator
-        # Adding the predator, setting up initial position then instantiating
-        predator_start = Point([random.uniform(-self.tank_dimensions[i] * 0.45, self.tank_dimensions[i] * 0.45) for i in range(3)])
-        Hunter = Predator(parent, predator_start, shaderProg)  # Use parent from Sketch
-        self.addNewObjInTank(Hunter)
-        self.creatures.append(Hunter)
+        tank_dims = self.tank_dimensions
+        
+        if sceneType == 'test':
+            # Test scene: 1 predator, 1 prey
+            predator_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+            predator = Predator(parent, predator_pos, shaderProg)
+            self.addNewObjInTank(predator)
+            self.creatures.append(predator)
 
-        # Adding the prey, setting up initial position then instantiating 2 with a for loop
-        for _ in range(2):
-            prey_pos = Point([random.uniform(-self.tank_dimensions[i] * 0.45, self.tank_dimensions[i] * 0.45) for i in range(3)])
-            Hunted = Prey(parent, prey_pos, shaderProg)  # Use parent from Sketch
-            self.addNewObjInTank(Hunted)
-            self.creatures.append(Hunted)
+            prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+            prey = Prey(parent, prey_pos, shaderProg)
+            self.addNewObjInTank(prey)
+            self.creatures.append(prey)
+        else:
+            # Default scene: 1 predator, 2 prey
+            predator_start = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+            predator = Predator(parent, predator_start, shaderProg)
+            self.addNewObjInTank(predator)
+            self.creatures.append(predator)
+
+            for _ in range(2):
+                prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
+                prey = Prey(parent, prey_pos, shaderProg)
+                self.addNewObjInTank(prey)
+                self.creatures.append(prey)
 
     def animationUpdate(self):
         """
@@ -146,54 +158,3 @@ class Vivarium(Component):
         self.addNewObjInTank(food)
         self.food_obj.append(food)
         food.initialize()
-
-    def resetDefaultScene(self):
-        # Remove all current creatures and food (and possibly other objects)
-        for obj in self.creatures[:]:
-            self.delObjInTank(obj)
-        for obj in self.food_obj[:]:
-            self.delObjInTank(obj)
-        self.creatures = []
-        self.food_obj = []
-        self.components = [self.tank]
-
-        # Recreate the default scene (1 predator, 2 prey)
-        tank_dims = self.tank_dimensions
-
-        # Add predator
-        predator_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
-        predator = Predator(self.parent, predator_pos, self.shaderProg)
-        self.addNewObjInTank(predator)
-        self.creatures.append(predator)
-        # Add two prey
-        for _ in range(2):
-            prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
-            prey = Prey(self.parent, prey_pos, self.shaderProg)
-            self.addNewObjInTank(prey)
-            self.creatures.append(prey)
-
-    def resetTestScene(self):
-        # Remove all current creatures and food
-        for obj in self.creatures[:]:
-            self.delObjInTank(obj)
-            self.creatures.remove(obj)
-        for obj in self.food_obj[:]:
-            self.delObjInTank(obj)
-            self.food_obj.remove(obj)
-
-        self.creatures = []
-        self.food_obj = []
-        self.components = [self.tank]
-
-        tank_dims = self.tank_dimensions
-
-        # Add just one predator, one prey
-        predator_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
-        predator = Predator(self.parent, predator_pos, self.shaderProg)
-        self.addNewObjInTank(predator)
-        self.creatures.append(predator)
-        # One prey
-        prey_pos = Point([random.uniform(-tank_dims[i] * 0.45, tank_dims[i] * 0.45) for i in range(3)])
-        prey = Prey(self.parent, prey_pos, self.shaderProg)
-        self.addNewObjInTank(prey)
-        self.creatures.append(prey)
