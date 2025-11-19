@@ -88,8 +88,8 @@ class DisplayableTorus(Displayable):
     def draw(self):
         self.vao.bind()
         # TODO 1.1 is here, switch from vbo to ebo
-        self.vbo.draw()
-        self.vao.unbind()
+        self.ebo.draw()
+        self.ebo.unbind()
 
     def initialize(self):
         """
