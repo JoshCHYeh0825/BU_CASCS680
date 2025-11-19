@@ -82,17 +82,26 @@ class DisplayableTorus(Displayable):
 
         # if doing texcoords: we need to pad one more row for both nsides and rings, to assign correct texture coord to them
         """
-        x = (r_axial + r*cos_phi)*cos_theta
-        y = (r_axial + r*cos_phi)*sin_theta
-        z = r*sin_phi
+        x = (r_Axial + r_Tube*cos_phi)*cos_theta
+        y = (r_Axial + r_Tube*cos_phi)*sin_theta
+        z = r_Tube*sin_phi
         """
 
-        # Calculating Tube and Axial Radius
+        #1. Calculating Tube and Axial Radius
         r_Tube = (outerRadius - innerRadius)/2
         r_Axial = innerRadius + r_Tube
         
+        #2. Generate grid of vertices  
         v_data = []
+        i_data = []
         
+        for phi in np.linspace(0, (2 * np.pi), (rings + 1)):
+            for theta in np.linspace(0, (2 * np.pi), (nsides + 1)):
+                
+                # Math for torus
+                x = (r_Axial + r_Tube * np.cos(theta)) * np.cos(phi)
+                y = (r_Axial + r_Tube * np.cos(theta)) * np.sin(phi)
+                z = r_Tube * np.sin(theta)
 
         self.vertices = np.zeros(0)
 
