@@ -81,18 +81,28 @@ class DisplayableTorus(Displayable):
         self.color = color
 
         # if doing texcoords: we need to pad one more row for both nsides and rings, to assign correct texture coord to them
+        """
+        x = (r_axial + r*cos_phi)*cos_theta
+        y = (r_axial + r*cos_phi)*sin_theta
+        z = r*sin_phi
+        """
+
+        # Calculating Tube and Axial Radius
+        r_Tube = (outerRadius - innerRadius)/2
+        r_Axial = innerRadius + r_Tube
+        
+        v_data = []
+        
+
         self.vertices = np.zeros(0)
 
         self.indices = np.zeros(0)
 
     def draw(self):
-        self.vao.bind()
         # TODO 1.1 is here, switch from vbo to ebo
-        # x = (r_axial + r*cos_phi)*cos_theta
-        # y = (r_axial + r*cos_phi)*sin_theta
-        # z = r*sin_phi
+        self.ebo.bind()
         self.ebo.draw()
-        self.ebo.unbind()
+        self.vao.unbind()
 
     def initialize(self):
         """
