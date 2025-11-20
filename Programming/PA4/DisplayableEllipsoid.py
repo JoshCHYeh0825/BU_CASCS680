@@ -97,7 +97,22 @@ class DisplayableEllipsoid(Displayable):
                 nx = (2 * x) / (radiusX ** 2)
                 ny = (2 * y) / (radiusY ** 2)
                 nz = (2 * z) / (radiusZ ** 2)
-        
+
+                # Normalizing the normals
+                length = math.sqrt(nx**2 + ny**2 + nz**2)
+                if length > 0:
+                    nx /= length
+                    ny /= length
+                    nz /= length
+
+                # Texture Coords [u, v]
+                u = theta / (2 * np.pi)
+                v = (phi + (np.pi / 2)) / np.pi
+
+                # Color
+                cr, cg, cb = color
+
+                vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])  
 
         self.vertices = np.zeros(0)
 

@@ -119,16 +119,15 @@ class DisplayableTorus(Displayable):
         # Triangulation
         tris = []
         width = nsides + 1  # Vertices in one ring row
-
-        for st in range(rings):
-            for sl in range(nsides):
+        for i in range(rings):
+            for j in range(nsides):
 
                 # Calculate the 4 indices of the quad
                 # current row
-                p1 = st * width + sl
+                p1 = i * width + j
                 p2 = p1 + 1
                 # next row
-                p3 = (st + 1) * width + sl
+                p3 = (i + 1) * width + j
                 p4 = p3 + 1
 
                 # Triangle 1

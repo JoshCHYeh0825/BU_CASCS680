@@ -107,12 +107,6 @@ class DisplayableSphere(Displayable):
         width = slices + 1  # Vertices per stack row
         for i in range(stacks):
             for j in range(slices):
-                """
-                Calculate the 4 indices of the quad
-                p1--p2
-                |  / |
-                p3--p4
-                """
                 p1 = i * width + j
                 p2 = p1 + 1
                 p3 = (i + 1) * width + j
