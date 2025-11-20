@@ -94,9 +94,9 @@ class DisplayableEllipsoid(Displayable):
                 z = radiusZ * np.sin(phi)
 
                 # Normals
-                nx = np.cos(phi) * np.cos(theta)
-                ny = np.cos(phi) * np.sin(theta)
-                nz = np.sin(phi)
+                nx = (2 * x) / (radiusX ** 2)
+                ny = (2 * y) / (radiusY ** 2)
+                nz = (2 * z) / (radiusZ ** 2)
         
 
         self.vertices = np.zeros(0)
