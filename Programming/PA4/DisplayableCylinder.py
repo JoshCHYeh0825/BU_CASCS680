@@ -72,6 +72,7 @@ class DisplayableCylinder(Displayable):
 
         cr, cg, cb = color
         vertex = []
+        indices = []
 
         z_top = height / 2.0
         z_bot = -height / 2.0
@@ -85,27 +86,41 @@ class DisplayableCylinder(Displayable):
         offset_ring2 = 2 + ring_width * 2
         offset_ring3 = 2 + ring_width * 3
 
-        for theta in np.linspace(0, 2 * np.pi, self.sides + 1):
+        for i, theta in enumerate(np.linspace(0, 2 * np.pi, self.sides + 1)):
             x = self.radius * np.cos(theta)
             y = self.radius * np.sin(theta)
 
             # Texture u-coordinate (horizontal around cylinder)
             u = i / sides
 
-            # -- Ring 0: Top Cap Edge --
+            # Ring 0: Top Cap Edge
             vertex.extend([x, y, z_top, 0, 0, 1, cr, cg, cb, u, 1.0])
-            
-            # -- Ring 1: Top Wall Edge --
+            # Ring 1: Top Wall Edge
             vertex.extend([x, y, z_top, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
-            
-            # -- Ring 2: Bot Wall Edge --
+            # Ring 2: Bot Wall Edge
             vertex.extend([x, y, z_bot, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
-            
-            # -- Ring 3: Bot Cap Edge --
+            # Ring 3: Bot Cap Edge
             vertex.extend([x, y, z_bot, 0, 0, -1, cr, cg, cb, u, 0.0])
-            
-        self.vertices = np.zeros(0)
-        self.indices = np.zeros(0)
+
+        # Generate indices
+        for i in range(sides):
+            current_i = i
+            next_i = i+1
+
+            indices.extend([0, offset_ring0 + current_i, offset_ring0 + next_i])
+
+            p1 = offset_ring1 + current_i  # Top Left
+            p2 = offset_ring1 + next_i   # Top Right
+            p3 = offset_ring2 + current_i  # Bot Left
+            p4 = offset_ring2 + next_i   # Bot Right
+
+            indices.extend([p1, p3, p2])  # Triangle 1
+            indices.extend([p2, p3, p4])  # Triangle 2
+
+            indices.extend([1, offset_ring3 + next_i, offset_ring3 + current_i])
+
+        self.vertices = np.array(vertex, dtype=np.float32)
+        self.indices = np.array(indices, dtype=np.uint32)
 
     def draw(self):
         self.vao.bind()
