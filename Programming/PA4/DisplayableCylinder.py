@@ -70,16 +70,24 @@ class DisplayableCylinder(Displayable):
         self.height = height
         self.color = color
 
+        cr, cg, cb = color
         vertex = []
 
         z_top = height / 2.0
         z_bot = -height / 2.0
-        
+
+        vertex.extend([0, 0, z_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
+        vertex.extend([0, 0, z_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
+
+        ring_width = sides + 1
+        offset_ring0 = 2
+        offset_ring1 = 2 + ring_width
+        offset_ring2 = 2 + ring_width * 2
+        offset_ring3 = 2 + ring_width * 3
+
         for theta in np.linspace(0, 2 * np.pi, self.sides + 1):
             x = self.radius * np.cos(theta)
             y = self.radius * np.sin(theta)
-            z_top = 
-
 
         self.vertices = np.zeros(0)
         self.indices = np.zeros(0)
