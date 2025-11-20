@@ -94,9 +94,9 @@ class DisplayableEllipsoid(Displayable):
                 z = radiusZ * np.sin(phi)
 
                 # Normals
-                nx = (2 * x) / (radiusX ** 2)
-                ny = (2 * y) / (radiusY ** 2)
-                nz = (2 * z) / (radiusZ ** 2)
+                nx = 2 * np.cos(phi) * np.cos(theta) / radiusX
+                ny = 2 * np.cos(phi) * np.sin(theta) / radiusY
+                nz = 2 * np.sin(phi) / radiusZ
 
                 # Normalizing the normals
                 length = math.sqrt(nx**2 + ny**2 + nz**2)
@@ -112,16 +112,31 @@ class DisplayableEllipsoid(Displayable):
                 # Color
                 cr, cg, cb = color
 
-                vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])  
+                vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
-        self.vertices = np.zeros(0)
+        tris = []
+        width = slices + 1  # Vertices per stack row
 
-        self.indices = np.zeros(0)
+        for i in range(stacks):
+            for j in range(slices):
+                p1 = i * width + j
+                p2 = p1 + 1
+                p3 = (i + 1) * width + j
+                p4 = p3 + 1
+
+                # Triangle 1
+                tris.extend([p1, p3, p2])
+
+                # Triangle 2
+                tris.extend([p2, p3, p4])
+
+        self.vertices = np.array(vertex, dtype=np.float32)
+        self.indices = np.array(tris, dtype=np.uint32)
 
     def draw(self):
         self.vao.bind()
         # TODO 1.1 is here, switch from vbo to ebo
-        self.vbo.draw()
+        self.ebo.draw()
         self.vao.unbind()
 
     def initialize(self):

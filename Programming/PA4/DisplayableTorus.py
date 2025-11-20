@@ -116,7 +116,6 @@ class DisplayableTorus(Displayable):
 
                 vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
-        # Triangulation
         tris = []
         width = nsides + 1  # Vertices in one ring row
         for i in range(rings):

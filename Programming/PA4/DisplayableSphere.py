@@ -105,6 +105,7 @@ class DisplayableSphere(Displayable):
 
         tris = []
         width = slices + 1  # Vertices per stack row
+
         for i in range(stacks):
             for j in range(slices):
                 p1 = i * width + j
