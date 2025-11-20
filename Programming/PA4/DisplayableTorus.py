@@ -92,7 +92,7 @@ class DisplayableTorus(Displayable):
         r_Axial = innerRadius + r_Tube
 
         # 2. Generate grid of vertices
-        vertices = []
+        vertex = []
 
         for theta in np.linspace(0, (2 * np.pi), (rings + 1)):
             for phi in np.linspace(0, (2 * np.pi), (nsides + 1)):
@@ -114,7 +114,7 @@ class DisplayableTorus(Displayable):
                 # Color [r, g, b]
                 cr, cg, cb = color
 
-                vertices.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
+                vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
         # Triangulation
         tris = []
@@ -136,12 +136,12 @@ class DisplayableTorus(Displayable):
                 # Triangle 2
                 tris.extend([p2, p3, p4])
 
-        self.vertices = np.array(vertices, dtype=np.float32)
+        self.vertices = np.array(vertex, dtype=np.float32)
         self.indices = np.array(tris, dtype=np.uint32)
 
     def draw(self):
         # TODO 1.1 is here, switch from vbo to ebo
-        self.ebo.bind()
+        self.vao.bind()
         self.ebo.draw()
         self.vao.unbind()
 

@@ -82,8 +82,23 @@ class DisplayableEllipsoid(Displayable):
         self.slices = slices
         self.color = color
 
+        vertex = []
         # if doing texcoords: will need to pad one more column for slice seam,
         # to assign correct texture coord
+        for phi in np.linspace(-np.pi / 2, np.pi / 2, stacks + 1):
+            for theta in np.linspace(0, 2 * np.pi, slices + 1):
+
+                # Parametric Equation
+                x = radiusX * np.cos(phi) * np.cos(theta)
+                y = radiusY * np.cos(phi) * np.sin(theta)
+                z = radiusZ * np.sin(phi)
+
+                # Normals
+                nx = np.cos(phi) * np.cos(theta)
+                ny = np.cos(phi) * np.sin(theta)
+                nz = np.sin(phi)
+        
+
         self.vertices = np.zeros(0)
 
         self.indices = np.zeros(0)

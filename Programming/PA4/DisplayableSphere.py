@@ -78,7 +78,7 @@ class DisplayableSphere(Displayable):
         self.slices = slices
         self.color = color
 
-        vertices = []
+        vertex = []
         # if doing texcoords: will need to pad one more column for slice seam,
         # to assign correct texture coord
         for phi in np.linspace(-np.pi / 2, np.pi / 2, stacks + 1):
@@ -87,7 +87,7 @@ class DisplayableSphere(Displayable):
                 # Parametric Equation
                 x = radius * np.cos(phi) * np.cos(theta)
                 y = radius * np.cos(phi) * np.sin(theta)
-                z = radius * np.sin(theta)
+                z = radius * np.sin(phi)
 
                 # Normals
                 nx = np.cos(phi) * np.cos(theta)
@@ -101,7 +101,7 @@ class DisplayableSphere(Displayable):
                 # Color
                 cr, cg, cb = color
 
-                vertices.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
+                vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
         tris = []
         width = slices + 1  # Vertices per stack row
@@ -124,13 +124,13 @@ class DisplayableSphere(Displayable):
                 # Triangle 2
                 tris.extend([p2, p3, p4])
 
-        self.vertices = np.array(vertices, dtype=np.float32)
+        self.vertices = np.array(vertex, dtype=np.float32)
         self.indices = np.array(tris, dtype=np.uint32)
 
     def draw(self):
         self.vao.bind()
         # TODO 1.1 is here, switch from vbo to ebo
-        self.vbo.draw()
+        self.ebo.draw()
         self.vao.unbind()
 
     def initialize(self):
