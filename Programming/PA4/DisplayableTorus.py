@@ -87,25 +87,57 @@ class DisplayableTorus(Displayable):
         z = r_Tube*sin_phi
         """
 
-        #1. Calculating Tube and Axial Radius
+        # 1. Calculating Tube and Axial Radius
         r_Tube = (outerRadius - innerRadius)/2
         r_Axial = innerRadius + r_Tube
-        
-        #2. Generate grid of vertices  
-        v_data = []
-        i_data = []
-        
-        for phi in np.linspace(0, (2 * np.pi), (rings + 1)):
-            for theta in np.linspace(0, (2 * np.pi), (nsides + 1)):
-                
-                # Math for torus
-                x = (r_Axial + r_Tube * np.cos(theta)) * np.cos(phi)
-                y = (r_Axial + r_Tube * np.cos(theta)) * np.sin(phi)
-                z = r_Tube * np.sin(theta)
 
-        self.vertices = np.zeros(0)
+        # 2. Generate grid of vertices
+        vertices = []
 
-        self.indices = np.zeros(0)
+        for theta in np.linspace(0, (2 * np.pi), (rings + 1)):
+            for phi in np.linspace(0, (2 * np.pi), (nsides + 1)):
+
+                # Parametric equations
+                x = (r_Axial + r_Tube * np.cos(phi)) * np.cos(theta)
+                y = (r_Axial + r_Tube * np.cos(phi)) * np.sin(theta)
+                z = r_Tube * np.sin(phi)
+
+                # Surface Normal
+                nx = np.cos(theta) * np.cos(phi)
+                ny = np.sin(theta) * np.cos(phi)
+                nz = np.sin(phi)
+
+                # Texture Coords [u, v]
+                u = phi / (2 * np.pi)
+                v = theta / (2 * np.pi)
+
+                # Color [r, g, b]
+                cr, cg, cb = color
+
+                vertices.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
+
+        # Triangulation
+        tris = []
+        width = nsides + 1  # Vertices in one ring row
+
+        for st in range(rings):
+            for sl in range(nsides):
+
+                # Calculate the 4 indices of the quad
+                # current row
+                p1 = st * width + sl
+                p2 = p1 + 1
+                # next row
+                p3 = (st + 1) * width + sl
+                p4 = p3 + 1
+
+                # Triangle 1
+                tris.extend([p1, p3, p2])
+                # Triangle 2
+                tris.extend([p2, p3, p4])
+
+        self.vertices = np.array(vertices, dtype=np.float32)
+        self.indices = np.array(tris, dtype=np.uint32)
 
     def draw(self):
         # TODO 1.1 is here, switch from vbo to ebo

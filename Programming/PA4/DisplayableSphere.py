@@ -77,79 +77,55 @@ class DisplayableSphere(Displayable):
         self.stacks = stacks
         self.slices = slices
         self.color = color
-        
-        # 1. Torus Parameters
-        # r = tube radius, R = major radius
-        r = (outerRadius - innerRadius) / 2.0
-        R = innerRadius + r
 
-        # 2. Generate Grid of Vertices (Using TF's linspace logic)
-        # We use (rings + 1) and (nsides + 1) to include the seam
-        vertex_list = []
-        
-        # phi (major angle) and theta (minor angle)
-        # We flatten the nested loop into a single vertex list
-        for phi in np.linspace(0, 2 * np.pi, rings + 1):
-            for theta in np.linspace(0, 2 * np.pi, nsides + 1):
-                
-                # --- Torus Math ---
-                cos_phi = np.cos(phi)
-                sin_phi = np.sin(phi)
-                cos_theta = np.cos(theta)
-                sin_theta = np.sin(theta)
+        vertices = []
+        # if doing texcoords: will need to pad one more column for slice seam,
+        # to assign correct texture coord
+        for phi in np.linspace(-np.pi / 2, np.pi / 2, stacks + 1):
+            for theta in np.linspace(0, 2 * np.pi, slices + 1):
 
-                # Position [x, y, z]
-                x = (R + r * cos_theta) * cos_phi
-                y = (R + r * cos_theta) * sin_phi
-                z = r * sin_theta
-                
-                # Normal [nx, ny, nz]
-                nx = cos_theta * cos_phi
-                ny = cos_theta * sin_phi
-                nz = sin_theta
+                # Parametric Equation
+                x = radius * np.cos(phi) * np.cos(theta)
+                y = radius * np.cos(phi) * np.sin(theta)
+                z = radius * np.sin(theta)
+
+                # Normals
+                nx = np.cos(phi) * np.cos(theta)
+                ny = np.cos(phi) * np.sin(theta)
+                nz = np.sin(phi)
 
                 # Texture Coords [u, v]
-                # Map indices to [0, 1] based on loop progress
-                u_coord = theta / (2 * np.pi) 
-                v_coord = phi / (2 * np.pi)
+                u = theta / (2 * np.pi)
+                v = (phi + (np.pi / 2)) / np.pi
 
-                # Color [r, g, b]
+                # Color
                 cr, cg, cb = color
 
-                # Append 11 attributes per vertex
-                vertex_list.extend([x, y, z, nx, ny, nz, cr, cg, cb, u_coord, v_coord])
+                vertices.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
-        # 3. Generate Indices (Triangulation)
-        # This replaces the "tris.append" part of TF's code to use EBO
-        indices = []
-        width = nsides + 1  # The number of vertices in one 'stack' or ring row
-
-        # We loop up to 'rings' and 'nsides' (not +1) to create the quads
-        for st in range(rings):
-            for sl in range(nsides):
-                
-                # Calculate the 4 indices of the quad
-                # current row
-                p1 = st * width + sl
+        tris = []
+        width = slices + 1  # Vertices per stack row
+        for i in range(stacks):
+            for j in range(slices):
+                """
+                Calculate the 4 indices of the quad
+                p1--p2
+                |  / |
+                p3--p4
+                """
+                p1 = i * width + j
                 p2 = p1 + 1
-                # next row
-                p3 = (st + 1) * width + sl
+                p3 = (i + 1) * width + j
                 p4 = p3 + 1
 
                 # Triangle 1
-                indices.extend([p1, p3, p2])
+                tris.extend([p1, p3, p2])
+
                 # Triangle 2
-                indices.extend([p2, p3, p4])
+                tris.extend([p2, p3, p4])
 
-        # 4. Store as Numpy Arrays
-        self.vertices = np.array(vertex_list, dtype=np.float32)
-        self.indices = np.array(indices, dtype=np.uint32)
-
-        # if doing texcoords: will need to pad one more column for slice seam,
-        # to assign correct texture coord
-        self.vertices = np.zeros(0)
-
-        self.indices = np.zeros(0)
+        self.vertices = np.array(vertices, dtype=np.float32)
+        self.indices = np.array(tris, dtype=np.uint32)
 
     def draw(self):
         self.vao.bind()
