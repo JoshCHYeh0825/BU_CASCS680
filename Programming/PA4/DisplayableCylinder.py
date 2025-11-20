@@ -70,13 +70,24 @@ class DisplayableCylinder(Displayable):
         self.height = height
         self.color = color
 
+        vertex = []
+
+        z_top = height / 2.0
+        z_bot = -height / 2.0
+        
+        for theta in np.linspace(0, 2 * np.pi, self.sides + 1):
+            x = self.radius * np.cos(theta)
+            y = self.radius * np.sin(theta)
+            z_top = 
+
+
         self.vertices = np.zeros(0)
         self.indices = np.zeros(0)
 
     def draw(self):
         self.vao.bind()
         # TODO 1.1 is here, switch from vbo to ebo
-        self.vbo.draw()
+        self.ebo.draw()
         self.vao.unbind()
 
     def initialize(self):

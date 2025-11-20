@@ -79,6 +79,8 @@ class DisplayableSphere(Displayable):
         self.color = color
 
         vertex = []
+        cr, cg, cb = color
+
         # if doing texcoords: will need to pad one more column for slice seam,
         # to assign correct texture coord
         for phi in np.linspace(-np.pi / 2, np.pi / 2, stacks + 1):
@@ -97,9 +99,6 @@ class DisplayableSphere(Displayable):
                 # Texture Coords [u, v]
                 u = theta / (2 * np.pi)
                 v = (phi + (np.pi / 2)) / np.pi
-
-                # Color
-                cr, cg, cb = color
 
                 vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 

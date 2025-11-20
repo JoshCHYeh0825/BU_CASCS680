@@ -86,13 +86,11 @@ class DisplayableTorus(Displayable):
         y = (r_Axial + r_Tube*cos_phi)*sin_theta
         z = r_Tube*sin_phi
         """
-
-        # 1. Calculating Tube and Axial Radius
         r_Tube = (outerRadius - innerRadius)/2
         r_Axial = innerRadius + r_Tube
 
-        # 2. Generate grid of vertices
         vertex = []
+        cr, cg, cb = color
 
         for theta in np.linspace(0, (2 * np.pi), (rings + 1)):
             for phi in np.linspace(0, (2 * np.pi), (nsides + 1)):
@@ -110,9 +108,6 @@ class DisplayableTorus(Displayable):
                 # Texture Coords [u, v]
                 u = phi / (2 * np.pi)
                 v = theta / (2 * np.pi)
-
-                # Color [r, g, b]
-                cr, cg, cb = color
 
                 vertex.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
 
