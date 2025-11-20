@@ -89,6 +89,21 @@ class DisplayableCylinder(Displayable):
             x = self.radius * np.cos(theta)
             y = self.radius * np.sin(theta)
 
+            # Texture u-coordinate (horizontal around cylinder)
+            u = i / sides
+
+            # -- Ring 0: Top Cap Edge --
+            vertex.extend([x, y, z_top, 0, 0, 1, cr, cg, cb, u, 1.0])
+            
+            # -- Ring 1: Top Wall Edge --
+            vertex.extend([x, y, z_top, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
+            
+            # -- Ring 2: Bot Wall Edge --
+            vertex.extend([x, y, z_bot, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
+            
+            # -- Ring 3: Bot Cap Edge --
+            vertex.extend([x, y, z_bot, 0, 0, -1, cr, cg, cb, u, 0.0])
+            
         self.vertices = np.zeros(0)
         self.indices = np.zeros(0)
 
