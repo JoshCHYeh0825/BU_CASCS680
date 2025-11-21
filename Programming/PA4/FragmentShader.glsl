@@ -88,7 +88,81 @@ void main()
     
     // Reserved for illumination rendering, routing name is "lighting" or "illumination"
     if ((renderingFlag >> 0 & 0x1) == 1){
-        vec4 result = vec4(vColor, 1.0);
+
+        // Setting up vectors
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(viewPosition - vPos);
+
+        // Setting ambient lighting as base color/lighting
+        vec3 finalColor = material.ambient.rgb * sceneAmbient;
+        
+        // Iterating lights
+        for(int i = 0, i < MAX_LIGHT_NUM; i++){
+            // Skip i = 0, inactive
+            if(length(light[i].color.rgb) == 0.0){
+                continue;
+            }
+            vec3 L; // Light vector L
+            float attn = 1.0; // Default value, attenuation variable
+
+            // TODO 4:
+            if(light[i].infiniteOn){
+                // 1. Infinite light, L constant everywhere, parallel
+                L = normalize(-light[i].infiniteDirection)
+            }
+            else{
+                // 2. Point light
+                vec3 L_v = light[i].position - vPos;
+                float d = length(L_v);
+                L = normalize(L_v);
+
+                // 3. Radial Attenuation
+                // f_r = 1 / (a0 + a1*d + a2*d^2)
+                // x = a0, y = a1, z = a2
+                float a0 = light[i].spotRadialFactor.x;
+                float a1 = light[i].spotRadialFactor.y;
+                float a2 = light[i].spotRadialFactor.z;
+
+                float att_r_poly = a0 + (a1 * d) + (a2 * d * d);
+
+                if(att_r_poly < 0.0001){
+                    att_r_poly = 1.0;
+                }
+                attn = 1.0 / att_r_poly;
+
+                // 4. Spotlight Angular Attenuation
+                if(light[i].spotOn){
+                    vec3 D = normalize(light[i].spotDirection); // D = direction
+
+                    // Angle between D and L
+                    float cos_alpha = dot(-L, D);
+                    float cos_alpha_limit = cos(light[i].spotAngleLimit);
+
+                    if(cos_alpha < cos_alpha_limit){
+                        attn = 0.0;
+                    }
+                }
+            }
+
+            // TODO 3
+            // 1. Diffusion
+            // I_diff = kd * Il * (N dot L)
+            float diffFactor = max(dot(N, L), 0.0);
+            vec3 diffuse = material.diffuse.rgb * light[i].color.rgb * diffFactor;
+
+            // 2.Specular
+            // I_spec = ks * Il * (V dot R)^ns
+            vec3 R = reflect(-L, N);
+
+            float specAngle = max(dot(V, R), 0.0);
+            float specFactor = pow(specAngle, material.highlight); // highlight = n_s
+            vec3 specular = material.specular.rgb * light[i].color.rgb * specFactor;
+
+            finalColor += attn * (diffuse + specular);
+        }
+        results[ri] = vec4(finalColor, 1.0);
+        ri+=1;
+    }
 
         ////////// TODO 3: Illuminate your meshes
         // Requirements:
@@ -105,10 +179,6 @@ void main()
         //   Spotlight with radial and angular attenuation
         //   * In the Sketch.py file Interrupt_keyboard method, bind keyboard interfaces that allows 
         //   the user to toggle on/off specular, diffuse, and ambient with keys S, D, A.
-
-        results[ri] = result;
-        ri+=1;
-    }
     
     // Reserved for rendering with vertex color, routing name is "vertex"
     if ((renderingFlag >> 1 & 0x1) == 1){
