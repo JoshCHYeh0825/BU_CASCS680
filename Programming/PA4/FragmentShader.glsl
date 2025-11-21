@@ -133,7 +133,15 @@ void main()
         //   vertex normal will be in the range -1 to 1. You will need to offset and rescale them to the 
         //   range 0 to 1.
         
-        results[ri] = vec4(0.5, 0.5, 0.5, 1.0);
+        // Renormalize interpolated normal
+        vec3 norm = normalize(vNormal);
+
+        // Mapping range [-1, 1] --> [0, 1]
+        // (norm * 0.5) + 0.5
+        vec3 color = (norm * 0.5) + 0.5;
+
+        results[ri] = vec4(color, 1.0);
+        
         ri+=1;
     }
     
