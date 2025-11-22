@@ -69,54 +69,58 @@ class DisplayableCube(Displayable):
         self.height = height
         self.color = color
 
-        self.vertices = np.zeros([36, 11])
-        vl = np.array([
-            # back face
-            -length/2, -width/2, -height/2, 0, 0, -1, *color,
-            -length/2, width/2, -height/2, 0, 0, -1, *color,
-            length/2, width/2, -height/2, 0, 0, -1, *color,
-            -length / 2, -width / 2, -height / 2, 0, 0, -1, *color,
-            length / 2, width / 2, -height / 2, 0, 0, -1, *color,
-            length/2, -width/2, -height/2, 0, 0, -1, *color,
-            # front face
-            -length/2, -width/2, height/2, 0, 0, 1, *color,
-            length/2, -width/2, height/2, 0, 0, 1, *color,
-            length/2, width/2, height/2, 0, 0, 1, *color,
-            -length / 2, -width / 2, height / 2, 0, 0, 1, *color,
-            length / 2, width / 2, height / 2, 0, 0, 1, *color,
-            -length/2, width/2, height/2, 0, 0, 1, *color,
-            # left face
-            -length/2, -width/2, -height/2, -1, 0, 0, *color,
-            -length/2, -width/2, height/2, -1, 0, 0, *color,
-            -length/2, width/2, height/2, -1, 0, 0, *color,
-            -length / 2, -width / 2, -height / 2, -1, 0, 0, *color,
-            -length / 2, width / 2, height / 2, -1, 0, 0, *color,
-            -length/2, width/2, -height/2, -1, 0, 0, *color,
-            # right face
-            length/2, -width/2, height/2, 1, 0, 0, *color,
-            length/2, -width/2, -height/2, 1, 0, 0, *color,
-            length/2, width/2, -height/2, 1, 0, 0, *color,
-            length / 2, -width / 2, height / 2, 1, 0, 0, *color,
-            length / 2, width / 2, -height / 2, 1, 0, 0, *color,
-            length/2, width/2, height/2, 1, 0, 0, *color,
-            # top face
-            -length/2, width/2, height/2, 0, 1, 0, *color,
-            length/2, width/2, height/2, 0, 1, 0, *color,
-            length/2, width/2, -height/2, 0, 1, 0, *color,
-            -length / 2, width / 2, height / 2, 0, 1, 0, *color,
-            length / 2, width / 2, -height / 2, 0, 1, 0, *color,
-            -length/2, width/2, -height/2, 0, 1, 0, *color,
-            # bot face
-            -length/2, -width/2, -height/2, 0, -1, 0, *color,
-            length/2, -width/2, -height/2, 0, -1, 0, *color,
-            length/2, -width/2, height/2, 0, -1, 0, *color,
-            -length / 2, -width / 2, -height / 2, 0, -1, 0, *color,
-            length / 2, -width / 2, height / 2, 0, -1, 0, *color,
-            -length/2, -width/2, height/2, 0, -1, 0, *color,
-        ]).reshape((36, 9))
-        self.vertices[0:36, 0:9] = vl
+        # Half Size dimensions
+        hl = length / 2.0
+        hw = width / 2.0
+        hh = height / 2.0
 
-        self.indices = np.array([])
+        # Color
+        if color is None:
+            cr, cg, cb = [1, 1, 1]
+        else:
+            cr, cg, cb = color
+
+        vertex_list = []
+        indices = []
+
+        # 24 vertices, 6 Faces * 4 vertices per face
+        faces = [
+            # Front (Z+)
+            {"n": [0, 0, 1], "v": [[-hl, -hw, hh], [hl, -hw, hh], [hl, hw, hh], [-hl, hw, hh]]},
+            # Back (Z-), winding reversed for outward normal
+            {"n": [0, 0, -1], "v": [[hl, -hw, -hh], [-hl, -hw, -hh], [-hl, hw, -hh], [hl, hw, -hh]]},
+            # Left (X-)
+            {"n": [-1, 0, 0], "v": [[-hl, -hw, -hh], [-hl, -hw, hh], [-hl, hw, hh], [-hl, hw, -hh]]},
+            # Right (X+)
+            {"n": [1, 0, 0], "v": [[hl, -hw, hh], [hl, -hw, -hh], [hl, hw, -hh], [hl, hw, hh]]},
+            # Top (Y+)
+            {"n": [0, 1, 0], "v": [[-hl, hw, hh], [hl, hw, hh], [hl, hw, -hh], [-hl, hw, -hh]]},
+            # Bottom (Y-)
+            {"n": [0, -1, 0], "v": [[-hl, -hw, -hh], [hl, -hw, -hh], [hl, -hw, hh], [-hl, -hw, hh]]},
+        ]
+
+        # Texture coordinates
+        texture_coords = [[0, 0], [1, 0], [1, 1], [0, 1]]
+
+        for i, face in enumerate(faces):
+            nx, ny, nz, = face["n"]
+
+            # Add 4 vertices per face
+            for j, pos in enumerate(face["v"]):
+                x, y, z = pos
+                u, v = texture_coords[j]
+
+                vertex_list.extend([x, y, z, nx, ny, nz, cr, cg, cb, u, v])
+
+            offset = i * 4
+
+            # Triangle 1: 0 - 1 - 2
+            indices.extend([offset + 0, offset + 1, offset + 2])
+            # Triangle 2: 0 - 2 - 3
+            indices.extend([offset + 0, offset + 2, offset + 3])
+
+        self.vertices = np.array(vertex_list, dtype=np.float32)
+        self.indices = np.array(indices, dtype=np.uint32)
 
     def draw(self):
         self.vao.bind()
@@ -144,4 +148,3 @@ class DisplayableCube(Displayable):
         # TODO/BONUS 6.1 is at here, you need to set attribPointer for texture coordinates
         # you should check the corresponding variable name in GLProgram and set the pointer
         self.vao.unbind()
-
