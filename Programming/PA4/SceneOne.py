@@ -51,7 +51,7 @@ class SceneOne(Scene):
         torus.setMaterial(m2)
         torus.setTexture(shaderProg, "./assets/marble.jpg")
         torus.renderingRouting = "lighting texture"
-        
+
         torus.rotate(90, torus.uAxis)
         self.addChild(torus)
 
