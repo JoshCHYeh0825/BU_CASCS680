@@ -77,15 +77,17 @@ class DisplayableCylinder(Displayable):
         z_top = height / 2.0
         z_bot = -height / 2.0
 
-        vertex.extend([0, 0, z_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
-        vertex.extend([0, 0, z_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
+        center_list = []
+        ring0_list = []  # Top Cap Edge
+        ring1_list = []  # Top Wall Edge
+        ring2_list = []  # Bot Wall Edge
+        ring3_list = []  # Bot Cap Edge
 
-        ring_width = sides + 1
-        offset_ring0 = 2
-        offset_ring1 = 2 + ring_width
-        offset_ring2 = 2 + ring_width * 2
-        offset_ring3 = 2 + ring_width * 3
+        # Center points
+        center_list.extend([0, 0, z_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
+        center_list.extend([0, 0, z_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
 
+        # Ring points
         for i, theta in enumerate(np.linspace(0, 2 * np.pi, self.sides + 1)):
             x = self.radius * np.cos(theta)
             y = self.radius * np.sin(theta)
@@ -93,16 +95,29 @@ class DisplayableCylinder(Displayable):
             # Texture u-coordinate (horizontal around cylinder)
             u = i / sides
 
-            # Ring 0: Top Cap Edge
-            vertex.extend([x, y, z_top, 0, 0, 1, cr, cg, cb, u, 1.0])
-            # Ring 1: Top Wall Edge
-            vertex.extend([x, y, z_top, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
-            # Ring 2: Bot Wall Edge
-            vertex.extend([x, y, z_bot, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
-            # Ring 3: Bot Cap Edge
-            vertex.extend([x, y, z_bot, 0, 0, -1, cr, cg, cb, u, 0.0])
+            # Ring 0: N Up
+            ring0_list.extend([x, y, z_top, 0, 0, 1, cr, cg, cb, u, 1.0])
+            # Ring 1: N Out
+            ring1_list.extend([x, y, z_top, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
+            # Ring 2: Bottom Wall (N Out)
+            ring2_list.extend([x, y, z_bot, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
+            # Ring 3: Bottom Cap (N Down)
+            ring3_list.extend([x, y, z_bot, 0, 0, -1, cr, cg, cb, u, 0.0])
+
+        full_vertex_list = center_list + ring0_list + ring1_list + ring2_list + ring3_list
+
+        self.vertices = np.array(full_vertex_list, dtype=np.float32)
 
         # Generate indices
+        indices = []
+
+        # Offsets (now guaranteed to be correct)
+        ring_width = sides + 1
+        offset_ring0 = 2
+        offset_ring1 = 2 + ring_width
+        offset_ring2 = 2 + ring_width * 2
+        offset_ring3 = 2 + ring_width * 3
+
         for i in range(sides):
             current_i = i
             next_i = i+1
@@ -119,7 +134,6 @@ class DisplayableCylinder(Displayable):
 
             indices.extend([1, offset_ring3 + next_i, offset_ring3 + current_i])
 
-        self.vertices = np.array(vertex, dtype=np.float32)
         self.indices = np.array(indices, dtype=np.uint32)
 
     def draw(self):

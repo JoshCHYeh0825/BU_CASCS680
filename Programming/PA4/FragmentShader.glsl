@@ -97,9 +97,9 @@ void main()
         vec3 finalColor = material.ambient.rgb * sceneAmbient;
         
         // Iterating lights
-        for(int i = 0, i < MAX_LIGHT_NUM; i++){
+        for(int i = 0; i < MAX_LIGHT_NUM; i++){
             // Skip i = 0, inactive
-            if(length(light[i].color.rgb) == 0.0){
+            if(length(light[i].color.rgb) == 0.0) {
                 continue;
             }
             vec3 L; // Light vector L
@@ -108,7 +108,7 @@ void main()
             // TODO 4:
             if(light[i].infiniteOn){
                 // 1. Infinite light, L constant everywhere, parallel
-                L = normalize(-light[i].infiniteDirection)
+                L = normalize(-light[i].infiniteDirection);
             }
             else{
                 // 2. Point light
