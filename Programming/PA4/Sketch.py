@@ -143,6 +143,12 @@ class Sketch(CanvasBase):
         # Image mode settings
         self.start_time = time.time()
 
+        # Lighting State
+        self.ambientOn = True
+        self.diffuseOn = True
+        self.specularOn = True
+        self.sceneIndex = 0
+
         # add components to top level
         self.resetView()
 
@@ -391,15 +397,23 @@ class Sketch(CanvasBase):
         if keycode in [wx.WXK_RETURN]:
             self.update()
         if keycode in [wx.WXK_LEFT]:
+            # Previous Scene logic (Placeholder until you create more scenes)
+            self.sceneIndex = (self.sceneIndex - 1) % 3
+            # if self.sceneIndex == 0: self.switchScene(SceneOne(self.shaderProg))
+            # elif self.sceneIndex == 1: self.switchScene(SceneTwo(self.shaderProg))
             self.update()
         if keycode in [wx.WXK_RIGHT]:
+            # Next Scene logic
+            self.sceneIndex = (self.sceneIndex + 1) % 3
             self.update()
+
         if keycode in [wx.WXK_UP]:
             self.Interrupt_Scroll(1)
             self.update()
         if keycode in [wx.WXK_DOWN]:
             self.Interrupt_Scroll(-1)
             self.update()
+
         if chr(keycode) in "rR":
             # reset viewing angle only
             self.resetView()
@@ -409,9 +423,48 @@ class Sketch(CanvasBase):
             self.ImageModeOn = not self.ImageModeOn
             self.shaderProg.setBool("imageFlag", self.ImageModeOn)
 
-        # TODO 4.2 is at here
-        # TODO 5.3 is at here
+        # Normal Rendering TODO 2
+        if chr(keycode) in "nN":
+            if self.topLevelComponent.renderingRouting == "normal":
+                self.topLevelComponent.renderingRouting = "lighting"
+            else:
+                self.topLevelComponent.renderingRouting = "normal"
 
+        # TODO 4.2 is at here
+        # Specular
+        if chr(keycode) in "sS":
+            self.specularOn = not self.specularOn
+            self.shaderProg.setBool("useSpecular", self.specularOn)
+            print(f"Specular: {self.specularOn}")
+        # Diffusion
+        if chr(keycode) in "dD":
+            self.diffuseOnn = not self.diffuseOn
+            self.shaderProg.setBool("useDiffuse", self.diffuseOn)
+            print(f"Diffuse: {self.diffuseOn}")
+        # Ambient
+        if chr(keycode) in "aA":
+            self.ambientOn = not self.ambientOn
+            self.shaderProg.setBool("useAmbient", self.ambientOn)
+            print(f"Ambient: {self.ambientOn}")
+
+        # TODO 5.3 is at here
+        if keycode >= 49 and keycode <= 57:
+            idx = keycode - 49
+            if self.scene and idx < len(self.scene.lights):
+                light = self.scene.lights[idx]
+                # If light is off, turn it On
+                if np.array_equal(light.color, np.array([0., 0., 0., 1.])):
+                    # Turn ON (Restore to White)
+                    light.color = np.array([1., 1., 1., 1.])
+                else:
+                    # Turn OFF (Set to Black)
+                    light.color = np.array([0., 0., 0., 1.])
+
+                # Update the shader with the new light data
+                self.shaderProg.setLight(idx, light)
+                print(f"Toggled Light {idx}")
+
+        self.update()
 
 if __name__ == "__main__":
     print("This is the main entry! ")
