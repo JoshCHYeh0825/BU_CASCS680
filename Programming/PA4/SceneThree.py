@@ -1,6 +1,6 @@
 """
-Second scene for TODO5
-Shapes: Ellipsoid, Torus, Cylinder
+Third scene for TODO5
+Shapes: Cube, Cylinder, Sphere
 """
 import math
 import numpy as np
@@ -13,9 +13,8 @@ from Material import Material
 from Point import Point
 import GLUtility
 
-from DisplayableEllipsoid import DisplayableEllipsoid
+from DisplayableSphere import DisplayableSphere
 from DisplayableCylinder import DisplayableCylinder
-from DisplayableTorus import DisplayableTorus
 from DisplayableCube import DisplayableCube
 
 
