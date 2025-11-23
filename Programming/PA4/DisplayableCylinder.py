@@ -71,11 +71,9 @@ class DisplayableCylinder(Displayable):
         self.color = color
 
         cr, cg, cb = color
-        vertex = []
-        indices = []
 
-        z_top = height / 2.0
-        z_bot = -height / 2.0
+        y_top = height / 2.0
+        y_bot = -height / 2.0
 
         center_list = []
         ring0_list = []  # Top Cap Edge
@@ -84,28 +82,27 @@ class DisplayableCylinder(Displayable):
         ring3_list = []  # Bot Cap Edge
 
         # Center points
-        center_list.extend([0, 0, z_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
-        center_list.extend([0, 0, z_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
+        center_list.extend([0, 0, y_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
+        center_list.extend([0, 0, y_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
 
         # Ring points
         for i, theta in enumerate(np.linspace(0, 2 * np.pi, self.sides + 1)):
             x = self.radius * np.cos(theta)
-            y = self.radius * np.sin(theta)
+            z = self.radius * np.sin(theta)
 
             # Texture u-coordinate (horizontal around cylinder)
             u = i / sides
 
             # Ring 0: N Up
-            ring0_list.extend([x, y, z_top, 0, 0, 1, cr, cg, cb, u, 1.0])
+            ring0_list.extend([x, y_top, z, 0, 0, 1, cr, cg, cb, u, 1.0])
             # Ring 1: N Out
-            ring1_list.extend([x, y, z_top, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
+            ring1_list.extend([x, y_top, z, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
             # Ring 2: Bottom Wall (N Out)
-            ring2_list.extend([x, y, z_bot, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
+            ring2_list.extend([x, y_bot, z, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
             # Ring 3: Bottom Cap (N Down)
-            ring3_list.extend([x, y, z_bot, 0, 0, -1, cr, cg, cb, u, 0.0])
+            ring3_list.extend([x, y_bot, z, 0, 0, -1, cr, cg, cb, u, 0.0])
 
         full_vertex_list = center_list + ring0_list + ring1_list + ring2_list + ring3_list
-
         self.vertices = np.array(full_vertex_list, dtype=np.float32)
 
         # Generate indices
