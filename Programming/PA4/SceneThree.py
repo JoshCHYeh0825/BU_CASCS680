@@ -33,16 +33,16 @@ class SceneTwo(Scene):
         self.sceneAmbient = np.array([0.2, 0.2, 0.2])
 
         # Obsidian Cube
-        cube = Component(Point((0, 0, 0)), DisplayableCube(shaderProg, 1.0, 1.0, 1.0, color=ColorType.BLUE))
-        m_gold = Material(
-            np.array([0.25, 0.22, 0.06, 1.0]),  # Ambient
-            np.array([0.35, 0.31, 0.09, 1.0]),  # Diffuse
-            np.array([0.8, 0.7, 0.2, 1.0]),     # Specular
-            83
+        cube = Component(Point((0, 0, 0)), DisplayableCube(shaderProg, 1.0, 1.0, 1.0, color=ColorType.BLACK))
+        m_Obsidian = Material(
+            np.array([0.05, 0.05, 0.07, 0.82]),  # Ambient
+            np.array([0.18, 0.17, 0.63, 0.82]),  # Diffuse
+            np.array([0.33, 0.33, 0.35, 0.82]),     # Specular
+            38
         )
-        ellipsoid.setMaterial(m_gold)
-        ellipsoid.renderingRouting = "lighting"
-        self.addChild(ellipsoid)
+        cube.setMaterial(m_Obsidian)
+        cube.renderingRouting = "lighting"
+        self.addChild(cube)
 
         # Emerald Cylinder
         cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, radius=0.5, height=2, color=ColorType.GREEN))
