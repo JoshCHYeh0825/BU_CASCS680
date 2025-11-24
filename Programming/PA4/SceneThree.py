@@ -30,10 +30,10 @@ class SceneTwo(Scene):
         self.glutility = GLUtility.GLUtility()
 
         # ambient lighting contribution from the scene
-        self.sceneAmbient = np.array([0.1, 0.1, 0.1])
+        self.sceneAmbient = np.array([0.2, 0.2, 0.2])
 
-        # Gold Ellipsoid
-        ellipsoid = Component(Point((-1.0, 0.5, 0)), DisplayableEllipsoid(shaderProg, 0.5, 0.6, 0.7, color=ColorType.YELLOW))
+        # Obsidian Cube
+        cube = Component(Point((0, 0, 0)), DisplayableCube(shaderProg, 1.0, 1.0, 1.0, color=ColorType.BLUE))
         m_gold = Material(
             np.array([0.25, 0.22, 0.06, 1.0]),  # Ambient
             np.array([0.35, 0.31, 0.09, 1.0]),  # Diffuse
