@@ -46,7 +46,7 @@ class SceneTwo(Scene):
         self.addChild(ellipsoid)
 
         # Emerald Cylinder
-        cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, radius=0.5, height=2, color=ColorType.GREEN))
+        cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, 0.5, 2, color=ColorType.GREEN))
         m_emerald = Material(
             np.array([0.02, 0.18, 0.02, 0.55]),  # Ambient
             np.array([0.08, 0.61, 0.08, 0.55]),  # Diffuse
@@ -58,7 +58,7 @@ class SceneTwo(Scene):
         self.addChild(cylinder)
 
         # Silver Torus
-        torus = Component(Point((0, 0.5, 1.0)), DisplayableTorus(shaderProg, 0.1, 0.4, 36, 36, ColorType.SILVER))
+        torus = Component(Point((0, 0.5, 1.0)), DisplayableTorus(shaderProg, 0.1, 0.4, 36, 36, color=ColorType.SILVER))
         m_silver = Material(
             np.array((0.19, 0.19, 0.19, 1.0)),  # Ambient
             np.array((0.51, 0.51, 0.51, 1.0)),  # Diffuse
@@ -69,7 +69,7 @@ class SceneTwo(Scene):
         torus.renderingRouting = "lighting"
         self.addChild(torus)
 
-        # --- LIGHTS ---
+        # Lights
         
         # Light 1: Spotlight
         l0_pos = np.array([0.0, 3.0, 0.0])

@@ -18,7 +18,7 @@ from DisplayableCylinder import DisplayableCylinder
 from DisplayableCube import DisplayableCube
 
 
-class SceneTwo(Scene):
+class SceneThree(Scene):
     lights = None
     lightCubes = None
     shaderProg = None
@@ -44,58 +44,51 @@ class SceneTwo(Scene):
         cube.renderingRouting = "lighting"
         self.addChild(cube)
 
-        # Emerald Cylinder
-        cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, radius=0.5, height=2, color=ColorType.GREEN))
-        m_emerald = Material(
-            np.array([0.02, 0.18, 0.02, 0.55]),  # Ambient
-            np.array([0.08, 0.61, 0.08, 0.55]),  # Diffuse
-            np.array([0.63, 0.73, 0.63, 0.55]),  # Specular
-            77
+        # Pearl Sphere
+        sphere = Component(Point((1.2, 0, 0)), DisplayableSphere(shaderProg, 0.6, color=ColorType.WHITE))
+        m_pearl = Material(
+            np.array([0.25, 0.21, 0.21, 0.92]),  # Ambient
+            np.array([1.00, 0.83, 0.83, 0.92]),  # Diffuse
+            np.array([0.30, 0.30, 0.30, 0.92]),  # Specular
+            11
         )
-        cylinder.setMaterial(m_emerald)
+        sphere.setMaterial(m_pearl)
+        sphere.renderingRouting = "lighting"
+        self.addChild(sphere)
+
+        # Copper Cylinder
+        cylinder = Component(Point((-1.2, 0, 0)), DisplayableCylinder(shaderProg, 0.3, 1.2, color=np.array([185/255, 115/255, 51/255])))
+        m_copper = Material(
+            np.array((0.19, 0.07, 0.02, 1.0)),  # Ambient
+            np.array((0.70, 0.27, 0.08, 1.0)),  # Diffuse
+            np.array((0.26, 0.14, 0.09, 1.0)),  # Specular
+            13
+        )
+        cylinder.setMaterial(m_copper)
         cylinder.renderingRouting = "lighting"
         self.addChild(cylinder)
 
-        # Silver Torus
-        torus = Component(Point((0, 0.5, 1.0)), DisplayableTorus(shaderProg, 0.1, 0.4, 36, 36, ColorType.SILVER))
-        m_silver = Material(
-            np.array((0.19, 0.19, 0.19, 1.0)),  # Ambient
-            np.array((0.51, 0.51, 0.51, 1.0)),  # Diffuse
-            np.array((0.51, 0.51, 0.51, 1.0)),  # Specular
-            51
-        )
-        torus.setMaterial(m_silver)
-        torus.renderingRouting = "lighting"
-        self.addChild(torus)
-
-        # --- LIGHTS ---
-        
-        # Light 1: Spotlight
-        l0_pos = np.array([0.0, 3.0, 0.0])
+        # Lights
+        # Light 1: INFINITE LIGHT (Sunlight)
         l0 = Light(
-            position=l0_pos,
-            color=np.array([1.0, 1.0, 1.0, 1.0]),
-            spotDirection=np.array([0.0, -1.0, 0.0]), 
-            spotAngleLimit=np.deg2rad(45)
+            color=np.array([0.8, 0.8, 0.8, 1.0]),
+            infiniteDirection=np.array([-1.0, -1.0, -0.5]) 
         )
-        # Visual Marker for L0
-        lightCube0 = Component(Point(l0_pos), DisplayableCube(shaderProg, 0.1, 0.1, 0.1, ColorType.WHITE))
-        lightCube0.renderingRouting = "vertex"
-        self.addChild(lightCube0)
+        # Note: Infinite lights don't need a position cube
 
         # Light 2: Point light
-        l1_pos = np.array([3.0, 1.0, 2.0])
+        l1_pos = np.array([0.0, 0.0, 4.0])
         l1 = Light(
             position=l1_pos,
-            color=np.array([1.0, 0.6, 0.2, 1.0])
+            color=np.array([0.4, 0.4, 0.4, 1.0])
         )
-        # Visual Marker for L1
-        lightCube1 = Component(Point(l1_pos), DisplayableCube(shaderProg, 0.1, 0.1, 0.1, ColorType.ORANGE))
+
+        lightCube1 = Component(Point(l1_pos), DisplayableCube(shaderProg, 0.1, 0.1, 0.1, ColorType.WHITE))
         lightCube1.renderingRouting = "vertex"
         self.addChild(lightCube1)
 
         self.lights = [l0, l1]
-        self.lightCubes = [lightCube0, lightCube1]
+        self.lightCubes = [None, lightCube1]  # Keep list aligned with lights list
 
     def animationUpdate(self):
         pass
