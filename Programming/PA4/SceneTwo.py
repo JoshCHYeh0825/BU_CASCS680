@@ -46,7 +46,7 @@ class SceneTwo(Scene):
         self.addChild(ellipsoid)
 
         # Emerald Cylinder
-        cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, 0.5, 2, color=ColorType.GREEN))
+        cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, radius=0.5, height=2, color=ColorType.GREEN))
         m_emerald = Material(
             np.array([0.02, 0.18, 0.02, 0.55]),  # Ambient
             np.array([0.08, 0.61, 0.08, 0.55]),  # Diffuse

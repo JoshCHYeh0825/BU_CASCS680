@@ -57,7 +57,7 @@ class SceneThree(Scene):
         self.addChild(sphere)
 
         # Copper Cylinder
-        cylinder = Component(Point((-1.2, 0, 0)), DisplayableCylinder(shaderProg, 0.3, 1.2, color=np.array([185/255, 115/255, 51/255])))
+        cylinder = Component(Point((-1.2, 0, 0)), DisplayableCylinder(shaderProg, radius=0.3, height=1.2, color=np.array([185/255, 115/255, 51/255])))
         m_copper = Material(
             np.array((0.19, 0.07, 0.02, 1.0)),  # Ambient
             np.array((0.70, 0.27, 0.08, 1.0)),  # Diffuse
