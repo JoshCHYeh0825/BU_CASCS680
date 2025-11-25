@@ -414,7 +414,7 @@ class Sketch(CanvasBase):
         if keycode in [wx.WXK_RIGHT]:
             # Next Scene logic
             self.sceneIndex = (self.sceneIndex + 1) % 3
-            
+
             if self.sceneIndex == 0:
                 self.switchScene(SceneOne(self.shaderProg))
             elif self.sceneIndex == 1:

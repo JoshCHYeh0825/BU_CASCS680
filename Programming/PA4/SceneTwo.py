@@ -77,7 +77,7 @@ class SceneTwo(Scene):
             position=l0_pos,
             color=np.array([1.0, 1.0, 1.0, 1.0]),
             spotDirection=np.array([0.0, -1.0, 0.0]), 
-            spotAngleLimit=np.deg2rad(45)
+            spotAngleLimit=float(np.deg2rad(45))
         )
         # Visual Marker for L0
         lightCube0 = Component(Point(l0_pos), DisplayableCube(shaderProg, 0.1, 0.1, 0.1, ColorType.WHITE))
