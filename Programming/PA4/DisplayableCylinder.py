@@ -82,8 +82,8 @@ class DisplayableCylinder(Displayable):
         ring3_list = []  # Bot Cap Edge
 
         # Center points
-        center_list.extend([0, 0, y_top, 0, 0, 1, cr, cg, cb, 0.5, 1.0])  # Top Center
-        center_list.extend([0, 0, y_bot, 0, 0, -1, cr, cg, cb, 0.5, 0.0])  # Bot Center
+        center_list.extend([0, y_top, 0, 0, 1, 0, cr, cg, cb, 0.5, 1.0])  # Top Center
+        center_list.extend([0, y_bot, 0, 0, -1, 0, cr, cg, cb, 0.5, 0.0])  # Bot Center
 
         # Ring points
         for i, theta in enumerate(np.linspace(0, 2 * np.pi, self.sides + 1)):
@@ -94,21 +94,22 @@ class DisplayableCylinder(Displayable):
             u = i / sides
 
             # Ring 0: N Up
-            ring0_list.extend([x, y_top, z, 0, 0, 1, cr, cg, cb, u, 1.0])
+            ring0_list.extend([x, y_top, z, 0, 1, 0, cr, cg, cb, u, 1.0])
             # Ring 1: N Out
-            ring1_list.extend([x, y_top, z, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 1.0])
+            ring1_list.extend([x, y_top, z, np.cos(theta), 0, np.sin(theta), cr, cg, cb, u, 1.0])
             # Ring 2: Bottom Wall (N Out)
-            ring2_list.extend([x, y_bot, z, np.cos(theta), np.sin(theta), 0, cr, cg, cb, u, 0.0])
+            ring2_list.extend([x, y_bot, z, np.cos(theta), 0, np.sin(theta), cr, cg, cb, u, 0.0])
             # Ring 3: Bottom Cap (N Down)
-            ring3_list.extend([x, y_bot, z, 0, 0, -1, cr, cg, cb, u, 0.0])
+            ring3_list.extend([x, y_bot, z, 0, -1, 0, cr, cg, cb, u, 0.0])
 
         full_vertex_list = center_list + ring0_list + ring1_list + ring2_list + ring3_list
         self.vertices = np.array(full_vertex_list, dtype=np.float32)
 
         # Generate indices
         indices = []
+        ring_width = sides + 1
 
-        # Offsets (now guaranteed to be correct)
+        # Offsets
         ring_width = sides + 1
         offset_ring0 = 2
         offset_ring1 = 2 + ring_width
@@ -119,8 +120,10 @@ class DisplayableCylinder(Displayable):
             current_i = i
             next_i = i+1
 
+            # Top Cap
             indices.extend([0, offset_ring0 + current_i, offset_ring0 + next_i])
 
+            # Side Walls
             p1 = offset_ring1 + current_i  # Top Left
             p2 = offset_ring1 + next_i   # Top Right
             p3 = offset_ring2 + current_i  # Bot Left
@@ -129,6 +132,7 @@ class DisplayableCylinder(Displayable):
             indices.extend([p1, p3, p2])  # Triangle 1
             indices.extend([p2, p3, p4])  # Triangle 2
 
+            # Bottom Cap
             indices.extend([1, offset_ring3 + next_i, offset_ring3 + current_i])
 
         self.indices = np.array(indices, dtype=np.uint32)

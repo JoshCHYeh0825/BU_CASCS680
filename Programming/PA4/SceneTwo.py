@@ -36,10 +36,10 @@ class SceneTwo(Scene):
         # Gold Ellipsoid
         ellipsoid = Component(Point((-1.0, 0.5, 0)), DisplayableEllipsoid(shaderProg, 0.5, 0.6, 0.7, color=ColorType.YELLOW))
         m_gold = Material(
-            np.array([0.25, 0.22, 0.06, 1.0]),  # Ambient
-            np.array([0.35, 0.31, 0.09, 1.0]),  # Diffuse
-            np.array([0.8, 0.7, 0.2, 1.0]),     # Specular
-            83
+            np.array([0.24725, 0.1995, 0.0745, 1.0]),  # Ambient
+            np.array([0.75164, 0.60648, 0.22648, 1.0]),  # Diffuse
+            np.array([0.62828, 0.55580, 0.36606, 1.0]),  # Specular
+            51.2  # Highlight
         )
         ellipsoid.setMaterial(m_gold)
         ellipsoid.renderingRouting = "lighting"
@@ -48,10 +48,10 @@ class SceneTwo(Scene):
         # Emerald Cylinder
         cylinder = Component(Point((1.0, 1.0, 0)), DisplayableCylinder(shaderProg, radius=0.5, height=2, color=ColorType.GREEN))
         m_emerald = Material(
-            np.array([0.02, 0.18, 0.02, 0.55]),  # Ambient
-            np.array([0.08, 0.61, 0.08, 0.55]),  # Diffuse
-            np.array([0.63, 0.73, 0.63, 0.55]),  # Specular
-            77
+            np.array([0.0215, 0.1745, 0.0215, 1.0]),  # Ambient
+            np.array([0.07568, 0.61424, 0.07568, 1.0]),  # Diffuse
+            np.array([0.633, 0.727811, 0.633, 1.0]),  # Specular
+            76.8  # Highlight
         )
         cylinder.setMaterial(m_emerald)
         cylinder.renderingRouting = "lighting"
@@ -60,17 +60,17 @@ class SceneTwo(Scene):
         # Silver Torus
         torus = Component(Point((0, 0.5, 1.0)), DisplayableTorus(shaderProg, 0.1, 0.4, 36, 36, color=ColorType.SILVER))
         m_silver = Material(
-            np.array((0.19, 0.19, 0.19, 1.0)),  # Ambient
-            np.array((0.51, 0.51, 0.51, 1.0)),  # Diffuse
-            np.array((0.51, 0.51, 0.51, 1.0)),  # Specular
-            51
+            np.array([0.19225, 0.19225, 0.19225, 1.0]),  # Ambient
+            np.array([0.50754, 0.50754, 0.50754, 1.0]),  # Diffuse
+            np.array([0.508273, 0.508273, 0.508273, 1.0]),  # Specular
+            51.2  # Highlight
         )
         torus.setMaterial(m_silver)
         torus.renderingRouting = "lighting"
         self.addChild(torus)
 
         # Lights
-        
+
         # Light 1: Spotlight
         l0_pos = np.array([0.0, 3.0, 0.0])
         l0 = Light(

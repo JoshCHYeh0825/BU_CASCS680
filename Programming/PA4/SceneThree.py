@@ -34,35 +34,35 @@ class SceneThree(Scene):
 
         # Obsidian Cube
         cube = Component(Point((0, 0, 0)), DisplayableCube(shaderProg, 1.0, 1.0, 1.0, color=ColorType.BLACK))
-        m_Obsidian = Material(
-            np.array([0.05, 0.05, 0.07, 0.82]),  # Ambient
-            np.array([0.18, 0.17, 0.63, 0.82]),  # Diffuse
-            np.array([0.33, 0.33, 0.35, 0.82]),     # Specular
-            38
+        m_obsidian = Material(
+            np.array([0.05375, 0.05, 0.06625, 1.0]),  # Ambient
+            np.array([0.18275, 0.17, 0.22525, 1.0]),  # Diffuse
+            np.array([0.332741, 0.328634, 0.346435, 1.0]),  # Specular
+            38.4  # Highlight
         )
-        cube.setMaterial(m_Obsidian)
+        cube.setMaterial(m_obsidian)
         cube.renderingRouting = "lighting"
         self.addChild(cube)
 
         # Pearl Sphere
         sphere = Component(Point((1.2, 0, 0)), DisplayableSphere(shaderProg, 0.6, color=ColorType.WHITE))
         m_pearl = Material(
-            np.array([0.25, 0.21, 0.21, 0.92]),  # Ambient
-            np.array([1.00, 0.83, 0.83, 0.92]),  # Diffuse
-            np.array([0.30, 0.30, 0.30, 0.92]),  # Specular
-            11
+            np.array([0.25, 0.20725, 0.20725, 1.0]),  # Ambient
+            np.array([1.0, 0.829, 0.829, 1.0]),  # Diffuse
+            np.array([0.296648, 0.296648, 0.296648, 1.0]),  # Specular
+            11.264  # Highlight
         )
         sphere.setMaterial(m_pearl)
         sphere.renderingRouting = "lighting"
         self.addChild(sphere)
 
         # Copper Cylinder
-        cylinder = Component(Point((-1.2, 0, 0)), DisplayableCylinder(shaderProg, radius=0.3, height=1.2, color=np.array([185/255, 115/255, 51/255])))
+        cylinder = Component(Point((-1.2, 0, 0)), DisplayableCylinder(shaderProg, radius=0.3, height=1.2, color=ColorType.RED))
         m_copper = Material(
-            np.array((0.19, 0.07, 0.02, 1.0)),  # Ambient
-            np.array((0.70, 0.27, 0.08, 1.0)),  # Diffuse
-            np.array((0.26, 0.14, 0.09, 1.0)),  # Specular
-            13
+            np.array([0.19125, 0.0735, 0.0225, 1.0]),  # Ambient
+            np.array([0.7038, 0.27048, 0.0828, 1.0]),  # Diffuse
+            np.array([0.256777, 0.137622, 0.086014, 1.0]),  # Specular
+            12.8  # Highlight
         )
         cylinder.setMaterial(m_copper)
         cylinder.renderingRouting = "lighting"
