@@ -193,6 +193,9 @@ class Sketch(CanvasBase):
         self.shaderProg.setMat4("model", np.identity(4))
         self.shaderProg.setVec3("viewPosition", np.array(self.getCameraPos()))
         self.shaderProg.setBool("imageFlag", self.ImageModeOn)
+        self.shaderProg.setBool("useAmbient", self.ambientOn)
+        self.shaderProg.setBool("useDiffuse", self.diffuseOn)
+        self.shaderProg.setBool("useSpecular", self.specularOn)
 
     def getCameraPos(self):
         ct = math.cos(self.cameraTheta)
@@ -458,7 +461,7 @@ class Sketch(CanvasBase):
 
         # Diffusion
         if chr(keycode) in "dD":
-            self.diffuseOnn = not self.diffuseOn
+            self.diffuseOn = not self.diffuseOn
             self.shaderProg.setBool("useDiffuse", self.diffuseOn)
             print(f"Diffuse: {self.diffuseOn}")
 

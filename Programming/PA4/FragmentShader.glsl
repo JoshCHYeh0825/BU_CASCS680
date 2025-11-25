@@ -46,6 +46,10 @@ uniform Material material;
 uniform Light light[MAX_LIGHT_NUM];
 uniform vec3 sceneAmbient;
 
+uniform bool useAmbient;
+uniform bool useDiffuse;
+uniform bool useSpecular;
+
 uniform bool imageFlag;
 uniform vec3 iResolution;
 uniform vec3 iMouse;
@@ -94,7 +98,11 @@ void main()
         vec3 V = normalize(viewPosition - vPos);
 
         // Setting ambient lighting as base color/lighting
-        vec3 finalColor = material.ambient.rgb * sceneAmbient * 4.0;
+        vec3 finalColor = vec3(0.0);
+
+        if(useAmbient){
+             finalColor = material.ambient.rgb * sceneAmbient * 4.0;
+        }
         
         // Iterating lights
         for(int i = 0; i < MAX_LIGHT_NUM; i++){
@@ -147,16 +155,21 @@ void main()
             // TODO 3
             // 1. Diffusion
             // I_diff = kd * Il * (N dot L)
-            float diffFactor = max(dot(N, L), 0.0);
-            vec3 diffuse = material.diffuse.rgb * light[i].color.rgb * diffFactor;
+            vec3 diffuse = vec3(0.0); // Default to black (Off)
+            if(useDiffuse){
+                float diffFactor = max(dot(N, L), 0.0);
+                diffuse = material.diffuse.rgb * light[i].color.rgb * diffFactor;
+            }
 
             // 2.Specular
             // I_spec = ks * Il * (V dot R)^ns
-            vec3 R = reflect(-L, N);
-
-            float specAngle = max(dot(V, R), 0.0);
-            float specFactor = pow(specAngle, material.highlight); // highlight = n_s
-            vec3 specular = material.specular.rgb * light[i].color.rgb * specFactor;
+            vec3 specular = vec3(0.0); // Default to black (Off)
+            if(useSpecular){
+                vec3 R = reflect(-L, N);
+                float specAngle = max(dot(V, R), 0.0);
+                float specFactor = pow(specAngle, material.highlight); 
+                specular = material.specular.rgb * light[i].color.rgb * specFactor;
+            }
 
             finalColor += attn * (diffuse + specular);
         }
