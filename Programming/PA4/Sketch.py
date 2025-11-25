@@ -398,32 +398,30 @@ class Sketch(CanvasBase):
 
         if keycode in [wx.WXK_RETURN]:
             self.update()
-        if keycode in [wx.WXK_LEFT]:
-            # Previous Scene logic (Placeholder until you create more scenes)
-            self.sceneIndex = (self.sceneIndex - 1) % 3
 
+        # Scene Switching
+        if keycode in [wx.WXK_LEFT]:
+            self.sceneIndex = (self.sceneIndex - 1) % 3
             if self.sceneIndex == 0:
                 self.switchScene(SceneOne(self.shaderProg))
             elif self.sceneIndex == 1:
                 self.switchScene(SceneTwo(self.shaderProg))
             elif self.sceneIndex == 2:
                 self.switchScene(SceneThree(self.shaderProg))
-
             self.update()
 
         if keycode in [wx.WXK_RIGHT]:
             # Next Scene logic
             self.sceneIndex = (self.sceneIndex + 1) % 3
-
             if self.sceneIndex == 0:
                 self.switchScene(SceneOne(self.shaderProg))
             elif self.sceneIndex == 1:
                 self.switchScene(SceneTwo(self.shaderProg))
             elif self.sceneIndex == 2:
                 self.switchScene(SceneThree(self.shaderProg))
-
             self.update()
-
+        
+        # Camera
         if keycode in [wx.WXK_UP]:
             self.Interrupt_Scroll(1)
             self.update()
@@ -442,22 +440,28 @@ class Sketch(CanvasBase):
 
         # Normal Rendering TODO 2
         if chr(keycode) in "nN":
-            if self.topLevelComponent.renderingRouting == "normal":
-                self.topLevelComponent.renderingRouting = "lighting"
-            else:
-                self.topLevelComponent.renderingRouting = "normal"
+            current_mode = "lighting"
+            if len(self.scene.children) > 0:
+                current_mode = self.scene.children[0].renderingRouting
+            target_mode = "normal" if current_mode == "lighting" else "lighting"
+            for child in self.scene.children:
+                child.renderingRouting = target_mode
+            print(f"Switched to {target_mode} mode")
+            self.update()
 
-        # TODO 4.2 is at here
+        # Shading for TODO 4
         # Specular
         if chr(keycode) in "sS":
             self.specularOn = not self.specularOn
             self.shaderProg.setBool("useSpecular", self.specularOn)
             print(f"Specular: {self.specularOn}")
+
         # Diffusion
         if chr(keycode) in "dD":
             self.diffuseOnn = not self.diffuseOn
             self.shaderProg.setBool("useDiffuse", self.diffuseOn)
             print(f"Diffuse: {self.diffuseOn}")
+
         # Ambient
         if chr(keycode) in "aA":
             self.ambientOn = not self.ambientOn
@@ -470,16 +474,15 @@ class Sketch(CanvasBase):
             if self.scene and idx < len(self.scene.lights):
                 light = self.scene.lights[idx]
                 # If light is off, turn it On
-                if np.array_equal(light.color, np.array([0., 0., 0., 1.])):
-                    # Turn ON (Restore to White)
-                    light.color = np.array([1., 1., 1., 1.])
-                else:
-                    # Turn OFF (Set to Black)
+                if light.color[0] > 0 or light.color[1] > 0 or light.color[2] > 0:
+                    # It's ON, so turn it OFF (Black)
                     light.color = np.array([0., 0., 0., 1.])
+                else:
+                    # It's OFF, so turn it ON (White)
+                    light.color = np.array([1., 1., 1., 1.])
 
-                # Update the shader with the new light data
                 self.shaderProg.setLight(idx, light)
-                print(f"Toggled Light {idx}")
+                print(f"Toggled Light {idx + 1}")
 
         self.update()
 
