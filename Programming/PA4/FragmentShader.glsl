@@ -94,7 +94,7 @@ void main()
         vec3 V = normalize(viewPosition - vPos);
 
         // Setting ambient lighting as base color/lighting
-        vec3 finalColor = material.ambient.rgb * sceneAmbient;
+        vec3 finalColor = material.ambient.rgb * sceneAmbient * 4.0;
         
         // Iterating lights
         for(int i = 0; i < MAX_LIGHT_NUM; i++){
@@ -160,7 +160,7 @@ void main()
 
             finalColor += attn * (diffuse + specular);
         }
-        results[ri] = vec4(finalColor, 1.0);
+        results[ri] = vec4((finalColor * 2.0), 1.0);
         ri+=1;
     }
 
@@ -240,5 +240,6 @@ void main()
     for(int i=0; i<ri; i++){
         outputResult += results[i]/ri;
     }
+
     FragColor = outputResult;
 }
