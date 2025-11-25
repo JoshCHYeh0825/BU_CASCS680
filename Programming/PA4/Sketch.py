@@ -22,6 +22,8 @@ from GLProgram import GLProgram
 from GLBuffer import VAO, VBO, EBO, Texture
 import GLUtility
 from SceneOne import SceneOne
+from SceneTwo import SceneTwo
+from SceneThree import SceneThree
 
 try:
     import wx
@@ -399,12 +401,27 @@ class Sketch(CanvasBase):
         if keycode in [wx.WXK_LEFT]:
             # Previous Scene logic (Placeholder until you create more scenes)
             self.sceneIndex = (self.sceneIndex - 1) % 3
-            # if self.sceneIndex == 0: self.switchScene(SceneOne(self.shaderProg))
-            # elif self.sceneIndex == 1: self.switchScene(SceneTwo(self.shaderProg))
+
+            if self.sceneIndex == 0:
+                self.switchScene(SceneOne(self.shaderProg))
+            elif self.sceneIndex == 1:
+                self.switchScene(SceneTwo(self.shaderProg))
+            elif self.sceneIndex == 2:
+                self.switchScene(SceneThree(self.shaderProg))
+
             self.update()
+
         if keycode in [wx.WXK_RIGHT]:
             # Next Scene logic
             self.sceneIndex = (self.sceneIndex + 1) % 3
+            
+            if self.sceneIndex == 0:
+                self.switchScene(SceneOne(self.shaderProg))
+            elif self.sceneIndex == 1:
+                self.switchScene(SceneTwo(self.shaderProg))
+            elif self.sceneIndex == 2:
+                self.switchScene(SceneThree(self.shaderProg))
+
             self.update()
 
         if keycode in [wx.WXK_UP]:
