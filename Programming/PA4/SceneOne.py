@@ -50,8 +50,7 @@ class SceneOne(Scene):
                       np.array((0.3, 0.3, 0.3, 1.0)), 64)
         torus.setMaterial(m2)
         torus.setTexture(shaderProg, "./assets/marble.jpg")
-        torus.renderingRouting = "lighting"
-
+        torus.renderingRouting = "lighting texture"
         torus.rotate(90, torus.uAxis)
         self.addChild(torus)
 
@@ -59,8 +58,8 @@ class SceneOne(Scene):
         m3 = Material(np.array((0.0, 0.1, 0.05, 1.0)), np.array((0, 0.6, 0.3, 1)),
                       np.array((0, 0.2, 0.1, 1)), 4)
         sphere.setMaterial(m3)
-        sphere.renderingRouting = "lighting"
         sphere.setTexture(shaderProg, "./assets/earth.jpg")
+        sphere.renderingRouting = "lighting texture"
         self.addChild(sphere)
 
         cylinder = Component(Point((-0.75, 0, 0.75)), DisplayableCylinder(shaderProg, color=ColorType.ORANGE))
