@@ -33,7 +33,7 @@ This assignment required moving from VBO-only rendering to EBO rendering. This m
     $$
     x = r_xcos(\phi)cos(\theta), \quad y = r_ycos(\phi)sin(\theta), \quad z = r_zsin(\phi)
     $$
-  * **Normal Calculation:** Instead of a simple directional vector, the normals are calculated using the gradient of the implicit ellipsoid equation:
+  * Normals are calculated using the gradient of the implicit ellipsoid equation:
     $$
     n_x = \frac{x}{r_x^2}, \quad n_y = \frac{y}{r_y^2}, \quad n_z = \frac{z}{r_z^2}
     $$
