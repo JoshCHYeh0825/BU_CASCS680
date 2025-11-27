@@ -16,14 +16,22 @@ This assignment required moving from VBO-only rendering to EBO rendering. This m
 * **Seam Handling:** Vertices at the UV seam ($\theta = 0$ and $\theta = 2\pi$) are duplicated geometrically but assigned different Texture Coordinates ($u=0$ vs $u=1$) to ensure correct mapping.
 * **Sphere:**
 
-  * Generated using spherical coordinates where:
-    * $x = rcos(\phi)cos(\theta)$, $y = rcos(\phi)sin(\theta)$, $z = rsin(\phi)$
+  * Generated using parametric equations, spherical coordinates where:
+
+    $$
+    x = rcos(\phi)cos(\theta), \quad y = rcos(\phi)sin(\theta), \quad z = rsin(\phi)
+    $$
   * Normals are calculated as the normalized vector from the origin to the vertex position:
-    * $n_x = cos(\phi)cos(\theta)$, $n_x = cos(\phi)sin(\theta)$, $n_z = sin(\phi)$
+
+    $$
+    n_x = cos(\phi)cos(\theta), \quad n_y = cos(\phi)sin(\theta), \quad n_z = sin(\phi)
+    $$
 * **Ellipsoid:**
 
   * Similar to the sphere but scaled by independent radii ($r_x, r_y, r_z$).
-  * **Normal Calculation:** Instead of a simple directional vector, the normals are calculated using the gradient of the implicit ellipsoid equation to ensure accurate lighting on non-uniform shapes:
+  * Their parametric equatsions are:
+    * $x = r_xcos(\phi)cos(\theta)$, $y = r_ycos(\phi)sin(\theta)$, $z = r_zsin(\phi)$
+  * **Normal Calculation:** Instead of a simple directional vector, the normals are calculated using the gradient of the implicit ellipsoid equation:
     $$
     n_x = \frac{x}{r_x^2}, \quad n_y = \frac{y}{r_y^2}, \quad n_z = \frac{z}{r_z^2}
     $$
