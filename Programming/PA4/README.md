@@ -57,8 +57,8 @@ This assignment required moving from VBO-only rendering to EBO rendering. This m
     4. Bottom Cap Edge (Normal - Down: 0, -1, 0)
   * Indices connect the centers to the caps (Triangle Fan) and the walls to each other (Triangle Strip/Quad logic).
 * **Cube:**
-  * Implemented with **24 unique vertices** (4 per face).
-  * Vertices are not shared between faces because each face requires a distinct normal vector (e.g., Front face normal is $\mathbf{0,0,1}$, Top face is $\mathbf{0,1,0}$).
+  * Implemented with 24 distinct vertices, 4 per face.
+  * Vertices are not shared between faces because each face requires a distinct normal vector
 
 # Rendering & Shading Implementation
 
