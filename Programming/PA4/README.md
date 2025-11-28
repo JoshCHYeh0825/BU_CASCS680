@@ -5,7 +5,7 @@ CASCS680
 
 PA4 - Shaded Rendering
 
-# Primitive Definitions (Mesh Generation)
+# Primitive Definitions (Mesh Generation TODO1)
 
 This assignment required moving from VBO-only rendering to EBO rendering. This means vertices are stored uniquely in `self.vertices`, and connectivity is defined via integer indices in `self.indices`.
 
@@ -64,27 +64,30 @@ This assignment required moving from VBO-only rendering to EBO rendering. This m
 
 ## Vertex & Normal Rendering (TODO 2)
 
-To verify geometry, I implemented a debug mode that visualizes surface normals. Since normal vectors have components in the range $[-1, 1]$, they cannot be directly displayed as color (which expects $[0, 1]$).
+Since normal vectors have components in the range $[-1, 1]$, they cannot be directly displayed as color (which expects $[0, 1]$).
 
-* **Mapping Logic:**
-  $$
-  \text{Color} = (\text{Normal} \times 0.5) + 0.5
-  $$
+* Mapping logic: `vec3 color = (normalize(vNormal) * 0.5) + 0.5;`
 * This renders upward surfaces ($+Y$) as Green, rightward ($+X$) as Red, and forward ($+Z$) as Blue.
 
 ## Illumination Model (TODO 3)
 
-I implemented the **Phong Reflection Model** within the Fragment Shader (`FragmentShader.glsl`). Lighting is calculated per-pixel for smooth results.
+Phong Reflection Model is implemented within Fragment Shader (`FragmentShader.glsl`). Lighting is calculated per-pixel rather than per vertex.
 
 * **Ambient:**
   * Calculated as $k_a \times I_{scene}$.
-  * **Implementation Detail:** A boost factor was applied to the ambient term to ensure shadows were visible and not pitch-black, matching the visual fidelity of the reference images.
-* **Diffuse (Lambertian):**
+  * A boost factor was applied to the ambient term to ensure shadows were visible and not pitch-black, matching the visual fidelity of the reference images.
+
+    ```
+    if(useAmbient){
+                 finalColor = material.ambient.rgb * sceneAmbient * 4.0;
+            }
+    ```
+* **Diffuse:**
   * Calculated using the dot product of the Normal ($N$) and Light Vector ($L$).
   * $$
-    I_{diff} = k_d \times I_{light} \times \max(N \cdot L, 0.0)
+    I_{diff} = k_d \times I_{light} \times \max(N \cdot L)
     $$
-* **Specular (Phong):**
+* **Specular:**
   * Calculated using the reflection vector $R$.
   * $$
     R = \text{reflect}(-L, N)
