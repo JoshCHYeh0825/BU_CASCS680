@@ -1,4 +1,3 @@
-
 Fall 2025
 Chih Han Yeh
 CASCS680
@@ -51,10 +50,10 @@ This assignment required moving from VBO-only rendering to EBO rendering. This m
 
 * * Implemented through the use of sharpe edges (distinct normals for the caps vs. the walls).
   * The generation loop creates 4 distinct rings of vertices for every vertical slice:
-    1. Top Cap Edge (Normal - Up: 0, 1, 0)
-    2. Top Wall Edge (Normal: Outwards)
-    3. Bottom Wall Edge (Normal: Outwards)
-    4. Bottom Cap Edge (Normal - Down: 0, -1, 0)
+    1. Top Cap Edge (Normal - Up: 0, 1, 0).
+    2. Top Wall Edge (Normal: Outwards).
+    3. Bottom Wall Edge (Normal: Outwards).
+    4. Bottom Cap Edge (Normal - Down: 0, -1, 0).
   * Indices connect the centers to the caps (Triangle Fan) and the walls to each other (Triangle Strip/Quad logic).
 * **Cube:**
   * Implemented with 24 distinct vertices, 4 per face.
@@ -90,7 +89,7 @@ Phong Reflection Model is implemented within Fragment Shader (`FragmentShader.gl
 * **Specular:**
   * Calculated using the reflection vector $R$.
   * $$
-    R = \text{reflect}(-L, N)
+    R = Reflect(-L, N)
     $$
   * $$
     I_{spec} = k_s \times I_{light} \times (V \cdot R)^{n_s}
@@ -102,29 +101,38 @@ Phong Reflection Model is implemented within Fragment Shader (`FragmentShader.gl
 The shader iterates through an array of `Light` structs, handling three distinct light types with specific physical properties:
 
 1. **Infinite Light:**
-   * Represents distant sources like the sun.
-   * The Light Vector $L$ is constant for all pixels and is calculated as $\text{normalize}(-\text{direction})$. No attenuation is applied.
+   * Represents distant light sources (i.e the Sun).
+   * The Light Vector $L$ is constant for all pixels and is calculated as $Normalized(-direction)$.
 2. **Point Light:**
    * $L$ is calculated as the normalized vector from the Fragment Position to the Light Position.
+     $$
+     L = norm(L_{Direction} = P_{light} = v_{pos})
+     $$
    * **Radial Attenuation:** Implemented using the polynomial inverse-square law provided in the lecture slides:
      $$
-     f_{atten} = \frac{1}{a_0 + a_1 d + a_2 d^2}
+     f_{atten} = \frac{1}{a_0 + a_1 d + a_2 d^2}, \quad d = lenght(P_{light} - v_{pos})
      $$
 3. **Spotlight:**
-   * Inherits Point Light properties but adds  **Angular Attenuation** .
+   * Inherits Point Light properties, with the addition of **Angular Attenuation**
    * Checks if the dot product between the light ray and the spotlight direction exceeds the cosine of the cutoff angle. If outside the cone, attenuation is set to 0.
+
+     ```
+     if (dot(-L, D) < cos(angleLimit)) {
+         attenuation = 0.0;
+     }
+     ```
 
 # Scenes & Materials (TODO 5)
 
 Two custom scenes were created to demonstrate different material properties. Materials were defined using specific coefficients for Ambient ($k_a$), Diffuse ($k_d$), and Specular ($k_s$) reflection.
 
-## Scene 2 (Metallic Theme)
+## Scene 2
 
 * **Shapes:** Ellipsoid (Gold), Cylinder (Emerald), Torus (Silver).
 * **Lighting:** Uses a **Spotlight** (overhead) and a Point light.
 * **Materials:** Uses high shininess values ($n_s > 50$) and specular colors that match the surface color (characteristic of metals).
 
-## Scene 3 (Matte Theme)
+## Scene 3
 
 * **Shapes:** Cube (Obsidian), Sphere (Pearl), Cylinder (Copper).
 * **Lighting:** Uses an **Infinite Light** (Sunlight) required by the assignment.
