@@ -101,7 +101,7 @@ void main()
         vec3 finalColor = vec3(0.0);
 
         if(useAmbient){
-             finalColor = material.ambient.rgb * sceneAmbient * 4.0;
+             finalColor = material.ambient.rgb * sceneAmbient;
         }
         
         // Iterating lights
@@ -146,7 +146,11 @@ void main()
                     float cos_alpha = dot(-L, D);
                     float cos_alpha_limit = cos(light[i].spotAngleLimit);
 
-                    if(cos_alpha < cos_alpha_limit){
+                    if(cos_alpha > cos_alpha_limit){
+                        float spotExponent = 15.0;
+                        attn *= pow(cos_alpha, spotExponent);
+                    }
+                    else {
                         attn = 0.0;
                     }
                 }

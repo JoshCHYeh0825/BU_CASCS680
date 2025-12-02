@@ -36,7 +36,7 @@ class SceneOne(Scene):
         self.glutility = GLUtility.GLUtility()
 
         # ambient lighting contribution from the scene
-        self.sceneAmbient = np.array([0.1, 0.1, 0.1])
+        self.sceneAmbient = np.array([0.4, 0.4, 0.4])
 
         cube = Component(Point((-0.75, 0, -0.75)), DisplayableCube(shaderProg, 1.0))
         m1 = Material(np.array((0.0, 0.05, 0.1, 1.0)), np.array((0, 0.3, 0.6, 1)),
@@ -77,7 +77,7 @@ class SceneOne(Scene):
         self.addChild(plane)
 
         l0_pos = np.array([0., 2.0, 0.])
-        l0 = Light(l0_pos, np.array([1.0, 1.0, 1.0, 1.0]), spotDirection=np.array((0.,-1.,0.)), spotAngleLimit=30*np.pi/180)
+        l0 = Light(l0_pos, np.array([1.0, 1.0, 1.0, 1.0]), spotDirection=np.array((0.,-1.,0.)), spotAngleLimit=30*np.pi/180, spotRadialFactor=np.array([0.0, 0.25, 0.0]))
         # l0 = Light(l0_pos, np.array([0, 0, 0, 1.0]), spotDirection=np.array((0.,-1.,0.)), spotAngleLimit=30*np.pi/180)
         lightCube0 = Component(Point(l0_pos), DisplayableCube(shaderProg, 0.1, 0.1, 0.1, ColorType.WHITE))
         lightCube0.renderingRouting = "vertex"

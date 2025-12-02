@@ -74,13 +74,6 @@ Phong Reflection Model is implemented within Fragment Shader (`FragmentShader.gl
 
 * **Ambient:**
   * Calculated as $k_a \times I_{scene}$.
-  * A boost factor was applied to the ambient term to ensure shadows were visible and not pitch-black, matching the visual fidelity of the reference images.
-
-    ```
-    if(useAmbient){
-                 finalColor = material.ambient.rgb * sceneAmbient * 4.0;
-            }
-    ```
 * **Diffuse:**
   * Calculated using the dot product of the Normal ($N$) and Light Vector ($L$).
   * $$
