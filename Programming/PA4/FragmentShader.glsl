@@ -172,7 +172,7 @@ void main()
                 vec3 R = reflect(-L, N);
                 float specAngle = max(dot(V, R), 0.0);
                 float specFactor = pow(specAngle, material.highlight); 
-                specular = material.specular.rgb * light[i].color.rgb * specFactor;
+                specular = material.specular.rgb * light[i].color.rgb * specFactor/2;
             }
 
             finalColor += attn * (diffuse + specular);

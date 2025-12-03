@@ -441,6 +441,16 @@ class Sketch(CanvasBase):
             self.ImageModeOn = not self.ImageModeOn
             self.shaderProg.setBool("imageFlag", self.ImageModeOn)
 
+        # Vertex Shading (Ambient only)
+        if chr(keycode) in "vV":
+            if self.topLevelComponent.renderingRouting == "vertex":
+                for child in self.scene.children:
+                    child.renderingRouting = "lighting"
+            else:
+                for child in self.scene.children:
+                    child.renderingRouting = "vertex"
+            self.update()
+
         # Normal Rendering TODO 2
         if chr(keycode) in "nN":
             current_mode = "lighting"
